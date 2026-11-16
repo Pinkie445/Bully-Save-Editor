@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bully Save Editor</title>
+<meta name="description" content="Free, in-browser save editor for Bully on PS4 (PS2 Classics). Edit money, health, respect, classes, clothes, weapons, collectibles and more - checksum fixed automatically.">
+<meta name="theme-color" content="#141f3a">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%231c2c52'/%3E%3Ctext x='32' y='46' font-size='40' font-family='Arial Black,Arial' font-weight='900' text-anchor='middle' fill='%23f2b51c'%3EB%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Permanent+Marker&display=swap" rel="stylesheet">
+<style>/* Bully Save Editor - "Bullworth Academy" theme
+   navy blazer tartan, manila folders, report cards and detention-slip yellows */
+:root{
+  --blazer:#141f3a; --blazer-2:#1c2c52; --blazer-3:#24386a;
+  --tartan-g:rgba(34,92,64,.32); --tartan-r:rgba(150,32,32,.22); --tartan-y:rgba(230,180,40,.18);
+  --manila:#f1dfae; --manila-d:#d9c084; --paper:#fbf6e8; --paper-2:#f5eedb; --rule:#e2d6b6;
+  --ink:#1a2030; --ink-soft:#4a5266; --muted:#7a7f8e;
+  --navy:#1c2c52; --crimson:#b52a22; --crimson-d:#7f1913; --gold:#f2b51c; --gold-d:#a77a0a; --green:#2c7a4a;
+  --bully-y:#ffd23a;
+  --shadow:0 2px 0 rgba(0,0,0,.08), 0 10px 24px rgba(5,10,25,.35);
+  --marker:'Permanent Marker','Marker Felt','Segoe Print','Chalkboard SE','Comic Sans MS',system-ui,sans-serif;
+  --hand:'Patrick Hand','Segoe Print','Bradley Hand','Chalkboard SE','Comic Sans MS',system-ui,sans-serif;
+  --ui:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  color:var(--ink); font:16px/1.45 var(--ui);
+  background-color:var(--blazer);
+  background-image:
+    repeating-linear-gradient(90deg,transparent 0 46px,var(--tartan-y) 46px 48px,transparent 48px 96px),
+    repeating-linear-gradient(0deg,transparent 0 46px,var(--tartan-y) 46px 48px,transparent 48px 96px),
+    repeating-linear-gradient(90deg,var(--tartan-g) 0 22px,transparent 22px 48px,var(--tartan-r) 48px 56px,transparent 56px 96px),
+    repeating-linear-gradient(0deg,var(--tartan-g) 0 22px,transparent 22px 48px,var(--tartan-r) 48px 56px,transparent 56px 96px);
+}
+button,input,select{font:inherit}
+
+/* ---------- header: school banner ---------- */
+.hdr{position:relative;background:linear-gradient(180deg,#0c1428,#16244a);color:#fff;padding:16px 16px 18px;box-shadow:0 6px 18px rgba(0,0,0,.45)}
+.hdr::after{content:"";position:absolute;left:0;right:0;bottom:-10px;height:10px;background:linear-gradient(180deg,var(--gold) 0 3px,var(--crimson-d) 3px 7px,var(--gold) 7px 10px)}
+.hdr-in{max-width:1080px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
+.crest{width:58px;height:66px;flex:0 0 auto;filter:drop-shadow(0 3px 0 rgba(0,0,0,.4))}
+.titles{display:flex;flex-direction:column;line-height:1}
+.logo{font-family:var(--marker);font-size:clamp(38px,7vw,58px);letter-spacing:2px;color:#fff;transform:rotate(-3deg);transform-origin:left;
+  text-shadow:3px 3px 0 #000,-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000}
+.sub{font-family:var(--marker);font-size:clamp(17px,2.6vw,22px);color:#111;background:var(--bully-y);padding:3px 10px 2px;margin-top:6px;align-self:flex-start;transform:rotate(-1.5deg);box-shadow:3px 3px 0 #000}
+.sub span{font-family:var(--ui);font-size:13px;font-weight:600;letter-spacing:.5px;opacity:.8}
+.hdr .spacer{flex:1}
+.pill{font-family:var(--marker);font-size:15px;color:var(--bully-y);border:2px solid var(--bully-y);padding:4px 12px;border-radius:4px;transform:rotate(2deg);letter-spacing:.5px}
+.tag{display:none}
+
+main{max-width:1080px;margin:0 auto;padding:30px 16px 120px}
+h2,h3{font-family:var(--marker);font-weight:400;margin:0 0 10px;color:var(--navy);letter-spacing:.3px}
+h2{font-size:26px;line-height:1.15}
+h3{font-size:20px}
+h2 .chip,h3 .chip{vertical-align:middle;font-family:var(--ui);letter-spacing:0}
+p{margin:6px 0}
+.note{color:var(--ink-soft);font-size:14.5px}
+
+/* ---------- cards: paper / manila ---------- */
+.card{position:relative;background:linear-gradient(180deg,var(--paper),var(--paper-2));border-radius:3px;box-shadow:var(--shadow);padding:22px 22px 18px;margin:20px 0;border:1px solid #d9cba5}
+.card > h2:first-child,.card > .row:first-child > h2,.card > .row:first-child > .row > h2{display:inline-block;background:linear-gradient(transparent 58%,rgba(255,210,58,.7) 58%,rgba(255,210,58,.7) 92%,transparent 92%);padding:0 4px;margin-left:-4px}
+.card.tilt{transform:rotate(-.3deg)}
+.card.tilt2{transform:rotate(.25deg)}
+.card::before{content:"";position:absolute;top:-14px;left:-8px;width:22px;height:46px;border:3px solid #9aa3b4;border-radius:11px;border-bottom-color:transparent;transform:rotate(14deg);opacity:.9}
+.card.notape::before{display:none}
+.sticky{background:linear-gradient(180deg,#fff5b8,#ffeb8a);border:none;box-shadow:0 10px 22px rgba(0,0,0,.35)}
+.sticky::before{display:none}
+.folder{background:linear-gradient(180deg,var(--manila),#ead39c);border-color:var(--manila-d)}
+.folder::before{display:none}
+.stamp{font-family:var(--marker);font-size:14px;letter-spacing:1px;text-transform:uppercase;color:rgba(181,42,34,.85);border:3px double rgba(181,42,34,.7);padding:2px 8px;transform:rotate(-4deg);white-space:nowrap}
+
+/* drop zone: locker */
+.drop{text-align:center;padding:30px 18px;border:3px dashed #8a93a8;border-radius:8px;background:repeating-linear-gradient(90deg,rgba(28,44,82,.04) 0 6px,transparent 6px 12px),#fff;cursor:pointer;transition:.15s}
+.drop:hover,.drop.on{border-color:var(--crimson);background:#fffaf0}
+.drop .big{font-family:var(--marker);font-size:28px;color:var(--crimson);transform:rotate(-1deg)}
+
+/* ---------- buttons ---------- */
+.btn{display:inline-flex;align-items:center;gap:6px;border:2px solid #0d1630;background:#fff;color:var(--navy);padding:8px 14px;border-radius:4px;cursor:pointer;font-family:var(--marker);font-size:16px;letter-spacing:.3px;line-height:1.15;transition:transform .08s,box-shadow .08s;box-shadow:3px 3px 0 #0d1630}
+.btn:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 #0d1630}
+.btn:active{transform:translate(2px,2px);box-shadow:0 0 0 #0d1630}
+.btn.red{background:var(--crimson);color:#fff}
+.btn.gold{background:var(--gold);color:#1a1405}
+.btn.small{font-size:14px;padding:5px 10px;box-shadow:2px 2px 0 #0d1630}
+.btn.done{background:#e3f1e7;border-color:var(--green);color:var(--green);box-shadow:2px 2px 0 var(--green)}
+.btn:disabled{opacity:.5;cursor:default;transform:none}
+.btn:disabled:hover{box-shadow:3px 3px 0 #0d1630}
+.btn.done:disabled:hover{box-shadow:2px 2px 0 var(--green)}
+
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.stat{background:#fffdf6;border:2px solid var(--manila-d);border-radius:4px;padding:10px 12px;box-shadow:2px 2px 0 rgba(0,0,0,.08)}
+.stat .k{font-size:12.5px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:600}
+.stat .v{font-family:var(--marker);font-size:23px;color:var(--navy)}
+
+/* ---------- tabs: folder tabs ---------- */
+.tabs{display:flex;flex-wrap:wrap;gap:4px;margin:26px 0 0;position:sticky;top:0;z-index:5;padding:10px 0 0;background:linear-gradient(var(--blazer) 75%,transparent)}
+.tab{position:relative;font-family:var(--marker);font-size:16px;letter-spacing:.3px;border:2px solid #0d1630;border-bottom:none;border-radius:8px 8px 0 0;padding:7px 14px 6px;cursor:pointer;background:var(--manila);color:#2b2a24;transform:translateY(4px);box-shadow:inset 0 4px 0 var(--c)}
+.tab:hover{transform:translateY(1px)}
+.tab.on{background:var(--paper);transform:none;color:var(--navy);box-shadow:inset 0 5px 0 var(--c);z-index:1}
+.tab:focus-visible,.btn:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--bully-y);outline-offset:2px}
+.panelwrap{border-top:5px solid var(--c);margin-top:0;padding-top:2px}
+
+/* ---------- fields ---------- */
+.field{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:11px 0;border-bottom:1px dashed var(--rule)}
+.field:last-child{border-bottom:none}
+.field .lab{flex:1 1 220px;font-weight:600;font-size:16.5px}
+.field .lab small{display:block;font-weight:400;font-size:13.5px;color:var(--muted);margin-top:1px}
+input[type=number],input[type=text],input[type=search],select{border:2px solid #b9ab86;border-radius:4px;padding:7px 9px;background:#fff;color:var(--ink);min-width:0}
+input[type=number]{width:130px}
+select{max-width:100%}
+input[type=range]{accent-color:var(--crimson);width:min(260px,100%)}
+input[type=checkbox]{width:22px;height:22px;accent-color:var(--crimson)}
+.val{font-family:var(--marker);font-size:20px;color:var(--crimson);min-width:48px;text-align:right}
+.bar{height:14px;border-radius:2px;background:#e8dfc6;overflow:hidden;flex:1 1 140px;min-width:120px;border:2px solid #0d1630}
+.bar i{display:block;height:100%;background:repeating-linear-gradient(45deg,var(--green),var(--green) 8px,#3a9160 8px,#3a9160 16px)}
+.chip{display:inline-block;font-size:13px;font-weight:600;padding:2px 9px;border-radius:3px;background:#e3f1e7;color:var(--green);border:1px solid #b2d8bf}
+.chip.warn{background:#fff1c9;color:#7a5200;border-color:#e9c66b}
+.chip.red{background:#fde4e1;color:var(--crimson-d);border-color:#efb1aa}
+p.chip{display:block;width:fit-content;max-width:100%}
+
+/* respect meters */
+.factions .field .lab{display:flex;align-items:center;gap:10px}
+.dot{width:16px;height:16px;border-radius:3px;display:inline-block;border:2px solid #0d1630}
+.meter{position:relative;flex:1 1 260px;display:flex;align-items:center;gap:10px}
+.meter input[type=range]{width:100%;flex:1}
+
+/* ---------- toast: big yellow "mission passed" text ---------- */
+.toast{position:fixed;left:50%;bottom:92px;transform:translateX(-50%) rotate(-2deg) scale(.9);font-family:var(--marker);font-size:clamp(22px,4vw,30px);color:var(--bully-y);letter-spacing:1px;text-align:center;
+  text-shadow:3px 3px 0 #000,-2px -2px 0 #000,2px -2px 0 #000,-2px 2px 0 #000,0 0 18px rgba(0,0,0,.6);z-index:20;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;max-width:calc(100% - 32px)}
+.toast.show{opacity:1;transform:translateX(-50%) rotate(-2deg) scale(1)}
+
+.changes{font-size:15.5px;margin:6px 0 0;padding-left:22px}
+.changes li{margin:3px 0}
+.changes li.risky{color:#7a5200}
+
+/* ---------- save bar ---------- */
+.savebar{position:fixed;left:0;right:0;bottom:0;z-index:10;display:flex;justify-content:center;align-items:center;gap:12px;padding:10px 16px;background:linear-gradient(180deg,#16244a,#0c1428);border-top:4px solid var(--gold);box-shadow:0 -6px 18px rgba(0,0,0,.35)}
+.savebar .note{font-family:var(--marker);font-size:15px;color:#e9e3cf}
+
+/* weapons */
+.weap{display:grid;grid-template-columns:28px 1fr auto;gap:8px 10px;align-items:center;padding:8px 0;border-bottom:1px dashed var(--rule)}
+.weap:last-child{border-bottom:none}
+.weap .nm{font-weight:600;font-size:16px}
+.weap .nm small{display:block;font-weight:400;font-size:12.5px;color:var(--muted)}
+.weap .amt{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.weap input[type=number]{width:76px}
+
+/* steps */
+.steps{counter-reset:s;list-style:none;padding:0;margin:8px 0 0}
+.steps li{counter-increment:s;position:relative;padding:5px 0 5px 42px;font-size:16px}
+.steps li::before{content:counter(s);position:absolute;left:0;top:3px;width:30px;height:30px;border-radius:3px;background:var(--crimson);color:#fff;display:grid;place-items:center;font-family:var(--marker);font-size:16px;transform:rotate(-4deg);box-shadow:2px 2px 0 #000}
+.tips{margin:6px 0 0;padding-left:20px}
+.tips li{margin:6px 0;line-height:1.45}
+.tips b{font-weight:700}
+
+.err{background:#fde4e1;border:2px solid #e9a39b;color:var(--crimson-d);padding:10px 12px;border-radius:4px;font-weight:600}
+.ok{background:#e3f1e7;border:2px solid #9fcdb0;color:var(--green);padding:10px 12px;border-radius:4px;font-weight:600}
+.hidden{display:none!important}
+footer{max-width:1080px;margin:0 auto;padding:0 16px 40px;color:#aab3c9;font-size:13px}
+
+/* ---------- report card (classes) ---------- */
+.report{position:relative;background:radial-gradient(ellipse at 20% 0,#24407e,#142a5c 60%,#0f2149);color:#f4efe0;border-radius:4px;padding:18px 20px 22px;box-shadow:var(--shadow);border:3px solid #0b1838;outline:2px solid var(--gold);outline-offset:-10px}
+.report-h{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;font-family:var(--marker);font-size:28px;color:var(--gold);padding:4px 10px 8px;border-bottom:2px solid var(--gold);margin:0 4px 8px}
+.report-note{font-size:14px;opacity:.85;margin:6px 10px 10px}
+.report-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px 44px;padding:6px 10px}
+.rc-name{font-family:var(--marker);font-size:20px;margin-bottom:4px;letter-spacing:.3px}
+.rc-boxes{display:flex;gap:4px}
+.rc-box{width:44px;height:38px;border:2px solid #f4efe0;background:rgba(255,255,255,.06);color:#46d36c;font-size:30px;line-height:1;cursor:pointer;display:grid;place-items:center;padding:0;font-weight:700;transition:background .1s}
+.rc-box:hover{background:rgba(255,255,255,.16)}
+.rc-box.on{background:rgba(70,211,108,.08);text-shadow:0 1px 0 #0b3d1a}
+.rc-box:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.rc-reward{font-size:13px;opacity:.85;margin-top:5px;min-height:1.4em}
+.rc-reward b{color:var(--gold);font-weight:600}
+.rc-list{margin:12px 10px 0;padding:10px 12px;border-top:1px dashed rgba(242,181,28,.6);font-size:13.5px}
+.rc-list summary{cursor:pointer;color:var(--gold);font-family:var(--marker);font-size:16px}
+.rc-list table{border-collapse:collapse;margin-top:8px;width:100%}
+.rc-list td,.rc-list th{padding:4px 8px;border-bottom:1px solid rgba(255,255,255,.12);text-align:left;vertical-align:top}
+.rc-list th{color:var(--gold);font-weight:600;white-space:nowrap}
+
+/* modal */
+.modal-bg{position:fixed;inset:0;background:rgba(6,10,22,.7);display:flex;align-items:center;justify-content:center;padding:16px;z-index:100}
+.modal{max-width:560px;width:100%;max-height:calc(100vh - 32px);overflow:auto;margin:0;transform:none!important;background:linear-gradient(180deg,#fffbe0,#fff2b0);border:3px solid #0d1630}
+.modal::before{display:none}
+.modal h2{color:var(--crimson-d)}
+.statlist .field{padding:6px 0}
+input[type=search]{font:inherit;box-sizing:border-box}
+
+@media(max-width:560px){
+  .tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin-left:-16px;margin-right:-16px;padding-left:16px;padding-right:16px}
+  .tab{white-space:nowrap;flex:0 0 auto}
+  .card{padding:18px 14px}
+  .card.tilt,.card.tilt2{transform:none}
+  .field .lab{flex-basis:100%}
+  .savebar .note{display:none}
+  .savebar .btn{flex:1;justify-content:center}
+  .rc-box{width:15vw;max-width:46px}
+  .report-grid{gap:14px}
+  .pill{display:none}
+  .crest{width:46px;height:52px}
+}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+.statlist{max-height:560px;overflow:auto;padding-right:8px;border:2px solid var(--rule);border-radius:4px;padding-left:12px;background:#fffdf6}
+</style>
+</head>
+<body>
+<header class="hdr">
+  <div class="hdr-in">
+    <svg class="crest" viewBox="0 0 64 72" aria-hidden="true">
+      <path d="M32 3 L60 11 V34 C60 52 47 63 32 69 C17 63 4 52 4 34 V11 Z" fill="#1c2c52" stroke="#f2b51c" stroke-width="3.5"/>
+      <path d="M8 14 L56 14 L56 22 L8 22 Z" fill="#7f1913"/>
+      <path d="M12 18h40" stroke="#f2b51c" stroke-width="1.5" stroke-dasharray="3 3"/>
+      <text x="32" y="53" text-anchor="middle" font-family="Georgia,'Times New Roman',serif" font-weight="700" font-size="30" fill="#f2b51c">B</text>
+      <circle cx="18" cy="30" r="2" fill="#f2b51c"/><circle cx="46" cy="30" r="2" fill="#f2b51c"/>
+    </svg>
+    <div class="titles">
+      <div class="logo">BULLY</div>
+      <div class="sub">Save Editor <span>PS4 · PS2 CLASSICS</span></div>
+    </div>
+    <div class="spacer"></div>
+    <div class="pill">Tested on a real PS4</div>
+  </div>
+</header>
+<main id="main"></main>
+<noscript><p class="err" style="max-width:700px;margin:20px auto">This editor needs JavaScript. Please enable it, or open the file in Chrome, Edge, Firefox or Safari.</p></noscript>
+<div id="savebar" class="savebar hidden"><span id="saveNote" class="note"></span><button id="saveBtn" class="btn red">Save &amp; export</button></div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<footer><span id="ver"></span> · Fan-made tool. Not affiliated with Rockstar Games. Works on decrypted saves of Bully (PS4, PS2 Classics) - checksum and memory-card error correction are handled automatically. Use at your own risk and keep a backup of your original save.</footer>
+<script>window.BULLY_DATA = {"cloth":[["P_Bandana3",0,"HEAD",1,0,0,1],["P_Toque1",0,"HEAD",1,2,0,1],["P_Toque2",0,"HEAD",1,2,0,1],["P_Toque3",0,"HEAD",1,2,0,1],["S_Bhat1",0,"HEAD",2,1,0,1],["S_Bhat2",0,"HEAD",2,1,0,1],["S_Bhat3",0,"HEAD",2,1,0,1],["S_Sunvisor1",0,"HEAD",2,0,0,1],["S_Sunvisor2",0,"HEAD",2,0,0,1],["S_Sunvisor3",0,"HEAD",2,0,0,1],["SP_DM_H",0,"HEAD",8,1,0,1],["SP_Gnome_H",0,"HEAD",8,2,0,1],["SP_Goldsuit_H",0,"HEAD",5,1,0,1],["SP_Wrestling_H",0,"HEAD",8,1,0,1],["R_SSleeves1",1,"TORSO",0,2,1,1],["R_SSleeves2",1,"TORSO",0,2,1,1],["R_SSleeves4",1,"TORSO",0,2,1,1],["R_SSleeves5",1,"TORSO",0,2,1,1],["R_SSleeves6",1,"TORSO",0,2,1,1],["R_LSleeves1",1,"TORSO",4,5,2,1],["R_LSleeves2",1,"TORSO",0,5,2,1],["R_LSleeves3",1,"TORSO",0,5,2,1],["R_LSleeves4",1,"TORSO",0,5,2,1],["R_LSleeves5",1,"TORSO",0,5,2,1],["R_Sweater1",1,"TORSO",4,5,2,1],["R_Sweater2",1,"TORSO",0,5,2,1],["R_Sweater3",1,"TORSO",0,5,2,1],["R_Sweater4",1,"TORSO",0,6,2,1],["R_Sweater5",1,"TORSO",4,5,2,1],["R_Jacket1",1,"TORSO",0,5,2,1],["R_Jacket2",1,"TORSO",0,6,2,1],["R_Jacket5",1,"TORSO",0,6,2,1],["B_SSleeves1",1,"TORSO",1,2,1,1],["B_SSleeves2",1,"TORSO",0,2,1,1],["B_SSleeves3",1,"TORSO",7,2,1,1],["B_LSleeves2",1,"TORSO",1,5,2,1],["B_LSleeves3",1,"TORSO",1,5,2,1],["B_LSleeves4",1,"TORSO",1,5,2,1],["B_Jersey1",1,"TORSO",1,2,1,1],["B_Jersey3",1,"TORSO",0,2,1,1],["B_Jersey4",1,"TORSO",0,2,1,1],["B_Jersey5",1,"TORSO",0,5,2,1],["B_Jersey6",1,"TORSO",0,5,2,1],["B_Jersey7",1,"TORSO",0,2,1,1],["B_Jersey8",1,"TORSO",0,2,1,1],["B_Jersey9",1,"TORSO",0,5,2,1],["B_Jersey10",1,"TORSO",0,5,2,1],["B_Sweater2",1,"TORSO",1,5,2,1],["B_Sweater3",1,"TORSO",1,5,2,1],["B_Sweater4",1,"TORSO",1,5,2,1],["B_Jacket1",1,"TORSO",1,6,2,1],["B_Jacket2",1,"TORSO",1,6,2,1],["B_Jacket3",1,"TORSO",5,5,2,1],["B_Jacket6",1,"TORSO",0,5,34,1],["P_SSleeves1",1,"TORSO",7,0,16,1],["P_SSleeves2",1,"TORSO",7,2,1,1],["P_SSleeves5",1,"TORSO",0,2,1,1],["P_SSleeves3",1,"TORSO",0,2,1,1],["P_SSleeves4",1,"TORSO",0,2,1,1],["P_SSleeves6",1,"TORSO",0,2,1,1],["P_SSleeves7",1,"TORSO",0,2,1,1],["P_SSleeves8",1,"TORSO",0,2,1,1],["P_SSleeves9",1,"TORSO",0,2,1,1],["P_SSleeves10",1,"TORSO",0,2,1,1],["P_SSleeves11",1,"TORSO",1,0,48,1],["P_SSleeves12",1,"TORSO",7,0,16,1],["P_SSleeves13",1,"TORSO",0,0,16,1],["P_SSleeves14",1,"TORSO",0,0,16,1],["P_LSleeves1",1,"TORSO",0,5,2,1],["P_LSleeves2",1,"TORSO",0,5,2,1],["P_LSleeves3",1,"TORSO",0,5,2,1],["P_LSleeves4",1,"TORSO",0,5,2,1],["P_LSleeves5",1,"TORSO",0,5,2,1],["P_LSleeves6",1,"TORSO",0,5,2,1],["P_LSleeves7",1,"TORSO",7,5,2,1],["P_LSleeves8",1,"TORSO",0,5,2,1],["P_LSleeves9",1,"TORSO",1,5,2,1],["P_LSleeves10",1,"TORSO",1,5,2,1],["P_Sweater1",1,"TORSO",1,5,2,1],["P_Sweater2",1,"TORSO",1,5,2,1],["P_Sweater3",1,"TORSO",1,5,2,1],["P_Sweater4",1,"TORSO",1,5,2,1],["P_Sweater5",1,"TORSO",1,5,2,1],["P_Sweater6",1,"TORSO",1,5,2,1],["P_Sweater7",1,"TORSO",1,5,2,1],["P_Sweater8",1,"TORSO",1,5,2,1],["P_Jacket1",1,"TORSO",1,6,2,1],["P_Jacket2",1,"TORSO",5,6,2,1],["P_Jacket3",1,"TORSO",1,5,2,1],["P_Jacket4",1,"TORSO",1,6,2,1],["P_Jacket5",1,"TORSO",1,6,2,1],["P_Jacket6",1,"TORSO",1,6,2,1],["S_SSleeves1",1,"TORSO",6,2,1,1],["S_SSleeves2",1,"TORSO",6,2,1,1],["S_SSleeves3",1,"TORSO",6,2,1,1],["S_SSleeves4",1,"TORSO",6,2,1,1],["S_SSleeves5",1,"TORSO",6,2,1,1],["S_SSleeves6",1,"TORSO",6,0,16,1],["S_SSleeves7",1,"TORSO",6,0,16,1],["S_SSleeves8",1,"TORSO",6,0,16,1],["S_LSleeves1",1,"TORSO",2,5,2,1],["S_LSleeves2",1,"TORSO",2,5,2,1],["S_LSleeves3",1,"TORSO",2,5,2,1],["S_LSleeves4",1,"TORSO",2,5,2,1],["S_Sweater1",1,"TORSO",3,5,1,1],["S_Sweater2",1,"TORSO",2,5,1,1],["S_Sweater5",1,"TORSO",2,2,33,1],["S_Jacket3",1,"TORSO",6,5,2,1],["S_Jacket4",1,"TORSO",6,5,2,1],["SP_BikeJersey",1,"TORSO",1,5,2,1],["SP_Ween_T",1,"TORSO",8,5,2,1],["SP_XmsSweater",1,"TORSO",8,6,2,1],["SP_Orderly_T",1,"TORSO",8,2,5,1],["SP_Boxing_T",1,"TORSO",1,0,20,1],["C_StpdShrt",1,"TORSO",8,2,1,1],["SP_Wrestling_T",1,"TORSO",6,2,20,1],["SP_PJ_T",1,"TORSO",7,2,33,1],["SP_Prison_T",1,"TORSO",1,2,5,1],["SP_Fries_T",1,"TORSO",8,2,1,1],["SP_DM_T",1,"TORSO",8,2,1,1],["SP_Gnome_T",1,"TORSO",8,5,6,1],["SP_Goldsuit_T",1,"TORSO",5,5,6,1],["SP_Ninja_T",1,"TORSO",8,5,2,1],["SP_NinjaW_T",1,"TORSO",8,5,2,1],["SP_NinjaR_T",1,"TORSO",8,5,2,1],["R_Watch1",2,"LEFT_WRIST",4,0,0,1],["R_Watch2",2,"LEFT_WRIST",4,0,0,1],["R_Watch3",2,"LEFT_WRIST",4,0,0,1],["R_Watch4",2,"LEFT_WRIST",4,0,0,1],["B_Watch1",2,"LEFT_WRIST",0,0,0,1],["B_Watch2",2,"LEFT_WRIST",0,0,0,1],["B_Watch3",2,"LEFT_WRIST",0,0,0,1],["B_Watch4",2,"LEFT_WRIST",0,0,0,1],["B_Watch5",2,"LEFT_WRIST",0,0,0,1],["P_Watch1",2,"LEFT_WRIST",3,0,0,1],["S_Wristband1",2,"LEFT_WRIST",6,0,0,1],["S_Wristband4",2,"LEFT_WRIST",6,0,0,1],["S_Wristband6",2,"LEFT_WRIST",6,0,0,1],["C_PinkWatch",2,"LEFT_WRIST",8,0,0,1],["SP_Boxing_G_L",2,"LEFT_WRIST",0,0,4,1],["R_Wristband1",3,"RIGHT_WRIST",0,0,0,1],["R_Wristband2",3,"RIGHT_WRIST",0,0,0,1],["R_Wristband3",3,"RIGHT_WRIST",0,0,0,1],["R_Wristband4",3,"RIGHT_WRIST",0,0,0,1],["B_Wristband1",3,"RIGHT_WRIST",0,0,0,1],["B_Wristband2",3,"RIGHT_WRIST",0,0,0,1],["B_Wristband3",3,"RIGHT_WRIST",0,0,0,1],["B_Wristband4",3,"RIGHT_WRIST",0,0,0,1],["B_Wristband5",3,"RIGHT_WRIST",0,0,0,1],["P_Wristband1",3,"RIGHT_WRIST",1,0,0,1],["P_Wristband2",3,"RIGHT_WRIST",1,0,0,1],["P_Wristband3",3,"RIGHT_WRIST",1,0,0,1],["P_Wristband4",3,"RIGHT_WRIST",1,0,0,1],["P_Wristband5",3,"RIGHT_WRIST",1,0,0,1],["P_Wristband6",3,"RIGHT_WRIST",1,0,0,1],["P_Wristband7",3,"RIGHT_WRIST",1,0,0,1],["P_Wristband8",3,"RIGHT_WRIST",0,0,0,1],["S_Wristband2",3,"RIGHT_WRIST",6,0,0,1],["S_Wristband3",3,"RIGHT_WRIST",6,0,0,1],["S_Wristband5",3,"RIGHT_WRIST",6,0,0,1],["C_BBracelets",3,"RIGHT_WRIST",0,0,0,1],["SP_Boxing_G_R",3,"RIGHT_WRIST",0,0,4,1],["R_Pants1",4,"LEGS",0,4,0,1],["R_Pants2",4,"LEGS",0,4,0,1],["R_Pants3",4,"LEGS",0,4,0,1],["R_Pants4",4,"LEGS",4,4,0,1],["R_Pants5",4,"LEGS",4,4,0,1],["R_Shorts1",4,"LEGS",0,2,0,1],["R_Shorts2",4,"LEGS",0,2,0,1],["R_Shorts3",4,"LEGS",0,2,0,1],["R_Shorts4",4,"LEGS",0,2,0,1],["R_Shorts5",4,"LEGS",0,2,0,1],["B_Pants1",4,"LEGS",0,4,0,1],["B_Pants2",4,"LEGS",5,4,32,1],["B_Pants3",4,"LEGS",0,4,0,1],["B_Pants4",4,"LEGS",0,4,0,1],["B_Pants6",4,"LEGS",0,4,0,1],["B_Pants7",4,"LEGS",0,4,0,1],["B_Pants8",4,"LEGS",0,4,0,1],["B_Shorts1",4,"LEGS",0,2,0,1],["B_Shorts2",4,"LEGS",0,2,0,1],["B_Shorts3",4,"LEGS",0,2,0,1],["B_Shorts4",4,"LEGS",0,2,0,1],["B_Shorts5",4,"LEGS",0,2,0,1],["B_Shorts6",4,"LEGS",0,2,0,1],["B_Shorts7",4,"LEGS",0,2,0,1],["P_Pants1",4,"LEGS",1,4,0,1],["P_Pants2",4,"LEGS",1,4,0,1],["P_Pants3",4,"LEGS",0,3,0,1],["P_Pants4",4,"LEGS",5,4,0,1],["P_Pants5",4,"LEGS",1,4,0,1],["P_Pants6",4,"LEGS",1,4,0,1],["P_Pants7",4,"LEGS",6,4,0,1],["P_Shorts1",4,"LEGS",1,2,0,1],["P_Shorts2",4,"LEGS",1,2,0,1],["P_Shorts3",4,"LEGS",0,2,0,1],["P_Shorts4",4,"LEGS",0,2,0,1],["S_Pants1",4,"LEGS",2,4,32,1],["S_Pants3",4,"LEGS",6,4,0,1],["S_Shorts1",4,"LEGS",2,2,0,1],["S_Shorts4",4,"LEGS",6,2,0,1],["S_Shorts5",4,"LEGS",2,2,0,1],["S_Shorts6",4,"LEGS",6,2,0,1],["SP_Orderly_P",4,"LEGS",0,4,4,1],["SP_Boxing_L",4,"LEGS",8,2,4,1],["C_ClownPants",4,"LEGS",8,4,0,1],["SP_Wrestling_L",4,"LEGS",0,2,4,1],["SP_Ween_L",4,"LEGS",8,4,0,1],["SP_PJ_L",4,"LEGS",0,4,32,1],["SP_Prison_L",4,"LEGS",8,4,4,1],["SP_Fries_L",4,"LEGS",8,4,0,1],["SP_BikeShorts",4,"LEGS",8,1,0,1],["SP_Swimsuit",4,"LEGS",8,0,0,1],["SP_Shorts",4,"LEGS",8,1,0,1],["SP_Gnome_L",4,"LEGS",8,4,4,1],["SP_Briefs",4,"LEGS",8,0,32,1],["SP_Goldsuit_L",4,"LEGS",5,4,4,1],["SP_Ninja_L",4,"LEGS",8,4,0,1],["SP_NinjaW_L",4,"LEGS",8,4,0,1],["SP_NinjaR_L",4,"LEGS",8,4,0,1],["R_Sneakers1",5,"FEET",4,3,0,1],["R_Sneakers2",5,"FEET",4,3,0,1],["R_Sneakers3",5,"FEET",4,3,0,1],["R_Sneakers4",5,"FEET",4,3,0,1],["R_Sneakers5",5,"FEET",4,3,0,1],["R_Boots2",5,"FEET",4,3,0,1],["R_Boots3",5,"FEET",4,3,0,1],["B_Boots1",5,"FEET",1,3,0,1],["B_Boots2",5,"FEET",5,3,0,1],["B_Boots3",5,"FEET",4,3,0,1],["B_Boots4",5,"FEET",4,3,0,1],["B_Boots5",5,"FEET",5,3,0,1],["B_Sneakers1",5,"FEET",5,3,0,1],["B_Sneakers2",5,"FEET",4,3,0,1],["B_Sneakers3",5,"FEET",4,3,0,1],["B_Sneakers4",5,"FEET",4,3,0,1],["B_Sneakers5",5,"FEET",4,3,0,1],["B_Sneakers6",5,"FEET",5,3,0,1],["B_Sneakers8",5,"FEET",5,3,0,1],["B_Sneakers9",5,"FEET",5,3,0,1],["B_Sneakers10",5,"FEET",5,3,0,1],["B_Sneakers11",5,"FEET",4,3,0,1],["B_Sneakers12",5,"FEET",6,3,0,1],["B_Sneakers13",5,"FEET",4,3,0,1],["P_Boots1",5,"FEET",3,3,0,1],["P_Boots2",5,"FEET",5,3,0,1],["P_Boots3",5,"FEET",5,3,0,1],["P_Boots4",5,"FEET",1,3,0,1],["P_Sneakers1",5,"FEET",6,3,0,1],["P_Sneakers2",5,"FEET",6,3,32,1],["P_Sneakers3",5,"FEET",5,3,0,1],["P_Sneakers4",5,"FEET",5,3,0,1],["P_Sneakers5",5,"FEET",3,3,0,1],["P_Sneakers6",5,"FEET",3,3,0,1],["P_Sneakers7",5,"FEET",6,3,0,1],["P_Sneakers8",5,"FEET",6,3,0,1],["P_Sneakers9",5,"FEET",6,3,0,1],["P_Sneakers10",5,"FEET",6,3,0,1],["P_Sneakers11",5,"FEET",5,3,0,1],["P_Sneakers12",5,"FEET",5,3,0,1],["P_Sneakers13",5,"FEET",5,3,0,1],["P_Sneakers14",5,"FEET",6,3,0,1],["P_Sneakers15",5,"FEET",6,3,0,1],["P_Sneakers16",5,"FEET",6,3,0,1],["P_Sneakers17",5,"FEET",6,3,0,1],["P_Sneakers18",5,"FEET",6,3,0,1],["P_Sneakers19",5,"FEET",5,3,0,1],["SP_Orderly_B",5,"FEET",8,3,4,1],["S_Sneakers1",5,"FEET",2,3,0,1],["S_Sneakers2",5,"FEET",2,3,0,1],["SP_Boxing_ft",5,"FEET",4,3,4,1],["C_ClownShoes",5,"FEET",8,3,0,1],["SP_Socks",5,"FEET",3,0,32,1],["SP_Wrestling_ft",5,"FEET",6,3,4,1],["SP_Gnome_ft",5,"FEET",8,3,4,1],["SP_Goldsuit_ft",5,"FEET",5,3,4,1],["SP_Mascot_B",5,"FEET",9,3,4,1],["SP_Ninja_Ft",5,"FEET",8,3,4,1],["SP_NinjaW_Ft",5,"FEET",8,3,4,1],["SP_NinjaR_Ft",5,"FEET",8,3,4,1],["B_FlatTop_01",0,"HAIR",5,1,0,1],["B_FlatTop_02",0,"HAIR",5,1,0,1],["B_FlatTop_03",0,"HAIR",5,1,0,1],["B_MFade_01",0,"HAIR",6,1,0,1],["B_MFade_02",0,"HAIR",6,1,0,1],["B_MFade_03",0,"HAIR",6,1,0,1],["B_MFade_04",0,"HAIR",6,1,0,1],["B_CrewCut_01",0,"HAIR",6,1,0,1],["B_CrewCut_02",0,"HAIR",6,1,0,1],["B_CrewCut_03",0,"HAIR",6,1,0,1],["B_CrewCut_04",0,"HAIR",6,1,0,1],["B_Caesar_01",0,"HAIR",3,1,0,1],["B_Caesar_02",0,"HAIR",3,1,0,1],["B_Caesar_03",0,"HAIR",3,1,0,1],["B_Caesar_04",0,"HAIR",3,1,0,1],["B_Buzz",0,"HAIR",6,0,0,1],["B_Bald",0,"HAIR",6,0,0,1],["R_GoodBoy_01",0,"HAIR",4,1,0,1],["R_GoodBoy_02",0,"HAIR",4,1,0,1],["R_GoodBoy_03",0,"HAIR",4,1,0,1],["R_GoodBoy_04",0,"HAIR",4,1,0,1],["R_Hwood_01",0,"HAIR",4,1,0,1],["R_Hwood_02",0,"HAIR",4,1,0,1],["R_Hwood_03",0,"HAIR",4,1,0,1],["R_Hwood_04",0,"HAIR",4,1,0,1],["R_HThrob_01",0,"HAIR",4,1,0,1],["R_HThrob_02",0,"HAIR",4,1,0,1],["R_HThrob_03",0,"HAIR",4,1,0,1],["R_HThrob_04",0,"HAIR",4,1,0,1],["R_SShag_01",0,"HAIR",4,1,0,1],["R_SShag_02",0,"HAIR",4,1,0,1],["R_SShag_03",0,"HAIR",4,1,0,1],["R_SShag_04",0,"HAIR",4,1,0,1],["R_ILeague_01",0,"HAIR",4,1,0,1],["R_ILeague_02",0,"HAIR",4,1,0,1],["R_ILeague_03",0,"HAIR",4,1,0,1],["R_ILeague_04",0,"HAIR",4,1,0,1],["R_SSmart_01",0,"HAIR",4,1,0,1],["R_SSmart_02",0,"HAIR",4,1,0,1],["R_SSmart_03",0,"HAIR",4,1,0,1],["R_SSmart_04",0,"HAIR",4,1,0,1],["P_Fauhawk_01",0,"HAIR",1,1,0,1],["P_Fauhawk_02",0,"HAIR",1,1,0,1],["P_Fauhawk_03",0,"HAIR",1,1,0,1],["P_Fauhawk_04",0,"HAIR",1,1,0,1],["P_Mh_Flat_01",0,"HAIR",1,0,0,1],["P_Mh_Flat_02",0,"HAIR",1,0,0,1],["P_Mh_Flat_03",0,"HAIR",1,0,0,1],["P_Mh_Flat_04",0,"HAIR",1,0,0,1],["P_Mh_Spike_01",0,"HAIR",1,0,0,1],["P_Mh_Spike_02",0,"HAIR",1,0,0,1],["P_Mh_Spike_03",0,"HAIR",1,0,0,1],["P_Mh_Spike_04",0,"HAIR",1,0,0,1],["P_Details1_01",0,"HAIR",1,0,0,1],["P_Details1_02",0,"HAIR",1,0,0,1],["P_Details1_03",0,"HAIR",1,0,0,1],["P_Details1_04",0,"HAIR",1,0,0,1],["P_Details2_01",0,"HAIR",1,0,0,1],["P_Details2_02",0,"HAIR",1,0,0,1],["P_Details2_03",0,"HAIR",1,0,0,1],["P_Details2_04",0,"HAIR",1,0,0,1],["P_Spiky_01",0,"HAIR",1,1,0,1],["P_Spiky_02",0,"HAIR",1,1,0,1],["P_Spiky_03",0,"HAIR",1,1,0,1],["P_Spiky_04",0,"HAIR",1,1,0,1],["P_Taper_01",0,"HAIR",4,1,0,1],["P_Taper_02",0,"HAIR",4,1,0,1],["P_Taper_03",0,"HAIR",4,1,0,1],["P_Taper_04",0,"HAIR",4,1,0,1]],"hats":["SP_Ween_H","SP_NinjaR_H","SP_Pumpkin_head","SP_Duncehat","SP_Mascot_H","SP_NinjaW_H","SP_GK_Helmet","SP_Fries_H","SP_EdnaMask","SP_BikeHelmet","SP_MortarBhat","SP_BMXhelmet","SP_PirateHat","R_Hat1","R_Hat2","R_Hat3","R_Hat4","R_Hat5","R_Hat6","B_Bhat1","B_Bhat2","B_Bhat3","B_Bhat4","B_Bhat5","B_Bhat6","B_Various3","B_Various4","B_Toque1","B_Toque2","B_Bucket1","B_Bucket2","B_Hunter1","B_Hunter2","B_Various2","B_Hunter3","B_Various1","B_Various5","P_Bhat1","P_Bhat2","P_Bhat3","P_Bhat4","P_Bhat5","P_Bhat6","P_Army1","P_Army2","P_Army3","P_Bandana1","P_Bandana2","C_DevilHorns","C_AngelHalo","C_StrangeHat","C_CanadaHat","SP_Firehat","SP_Cowboyhat","SP_Werewolf","SP_Zorromask","C_ClownWig","SP_Ninja_H","SP_VHelmet","SP_Pophat"],"stats":{"0":"Money Earned","1":"Room Trophies Unlocked","2":"Time Played","3":"Times Busted","4":"Times Passed Out","5":"Distance Travelled On Foot","6":"Distance Travelled On Skateboard","7":"Distance Travelled On Bike","8":"Distance Travelled On Go Kart","9":"Distance Travelled On Go Kart (dup code)","10":"Distance Travelled On Lawnmower","11":"Distance Swam","12":"Times Tattled On","13":"Times Slipped On Banana Skin","14":"Times Slipped On Marbles","15":"Mascot Dances Attempted","16":"Mascot Dances Completed","17":"Hit By Car","18":"Food Fights Started","19":"Snowball Fights Started","20":"Windows Broken","21":"Plants Smashed","22":"Cars Egged","23":"Fire Crackers In Toilets","24":"Cars Damaged","26":"Trash Bins Smashed","27":"Crates Smashed","28":"Times Hidden","29":"Times Using Toilet","30":"Times Using Urinal","31":"Fire Alarms Pulled","32":"Wedgies Given","33":"Swirlies Given","34":"People Stuffed In Lockers","35":"People Stuffed In Bins","36":"Chocolates Found","37":"Chocolates Obtained","38":"Flowers Found","39":"Flowers Obtained","40":"Sodas Drank","41":"Frisbees Thrown","42":"Basketballs Dribbled","43":"Soccer Balls Kicked","44":"Footballs Thrown","45":"Facts Gained From World Globe","46":"Bikes Jacked","47":"Times Crashed On Bike","48":"Pushed Off Bike","49":"Wheelies","52":"Bike Garages Used","54":"Carnival Races Raced","55":"Carnival Races Won","56":"Street Races Raced","57":"Street Races Won","58":"Money Spent On Bikes","59":"Money Spent In The General Store","60":"Money Spent On Clothing","61":"Money Spent In The Comic Store","62":"Money Spent On Haircuts","63":"Money Spent On Tattoos","64":"Items Purchased","65":"Bikes Purchased","66":"Clothing Items Purchased","67":"Haircuts Purchased","68":"Tattoos Purchased","69":"Water Balloons Made","70":"Water Balloons Thrown","71":"Water Balloons Hit","72":"Itching Powder Thrown","73":"Itching Powder Hits","74":"Stink Bomb Thrown","75":"Stink Bomb Hits","76":"Kick Me Signs Used","77":"Marbles Dropped","78":"People Tripped With Marbles","82":"Volcano 4000s Used","83":"People Knocked Down By Volcano 4000","194":"Sodas Bought","166":"Classes Skipped","167":"Papers Thrown","168":"Papers Delivered","169":"People Hit By Papers","170":"Dogs Hit By Papers","171":"Money Earned On Paper Routes","172":"Mowing Attempted","173":"Mowing Completed","175":"Money Earned Mowing","176":"Snow Shoveling Attempted","177":"Snow Shoveling Completed","179":"Money Won In Bike Races","180":"Boxing Matches Entered","181":"Boxing Matches Won","182":"Money Won In Boxing","183":"Pictures Taken","185":"Pictures Of Nerds","186":"Pictures Of Preps","187":"Pictures Of Greasers","188":"Pictures Of Jocks","189":"Pictures Of Townies","190":"Pictures Of Teachers","191":"Pictures Of Prefects","192":"Pictures Of Townsfolk","193":"Pictures Of Bullies","200":"Tags Sprayed","201":"Nerd Tags Sprayed","202":"Preppie Tags Sprayed","203":"Greaser Tags Sprayed","204":"Jock Tags Sprayed","205":"Tagging In View Of Authority","206":"Attempted Lock Picks","207":"Successful Lock Picks","208":"Items Taken From Lockers","53":"Times Knocked Out","84":"Nerds Knocked Out","85":"Knocked Out By Nerds","86":"Bullies Knocked Out","87":"Knocked Out By Bullies","88":"Preps Knocked Out","89":"Knocked Out By Preps","90":"Greasers Knocked Out","91":"Knocked Out By Greasers","92":"Jocks Knocked Out","93":"Knocked Out By Jocks","94":"Townies Knocked Out","95":"Knocked Out By Townies","96":"Rats Killed","97":"Times Slapped","98":"Times Kicked In The Nuts","99":"Punches Thrown","100":"Punches Hit","101":"Kicks Attempted","102":"Kicks Landed","103":"Grapples Attempted","104":"Successful Grapples","105":"Melee Weapon Attacks","106":"Melee Weapon Hits","107":"Projectiles Fired","108":"Projectile Hits","109":"Firecrackers Collected","110":"Firecrackers Thrown","111":"Firecracker Hits","112":"Spuds Collected","113":"Spud Gun Fired","114":"Spud Gun Hits","115":"Eggs Collected","116":"Eggs Thrown","117":"Egg Hits","118":"Bottle Rockets Collected","119":"Bottle Rockets Fired","120":"Bottle Rocket Hits","121":"Slingshot Fired","122":"Slingshot Hits","123":"Super Slingshot Fired","124":"Super Slingshot Hits","125":"Snowballs Thrown","126":"Snowball Hits","127":"Food Items Thrown","128":"Food Item Hits","198":"People Knocked Out","195":"Ferris Wheel Rides","209":"Times Knocked Down","210":"Dodgeballs Thrown","211":"Successful Dodgeball Hits","212":"Keep-Ups Played","213":"Keep-Ups Won","214":"Penalty Shootout Played","215":"Penalty Shootout Won","216":"Money Earned On Errands","217":"ConSumo Games Played","218":"ConSumo High Score","219":"Money Spent On ConSumo","220":"Monkey Fling Games Played","221":"Monkey Fling High Score","222":"Money Spent On Monkey Fling","223":"Nut Shots Games Played","224":"Nut Shots High Score","225":"Money Spent On Nut Shots","226":"FS Racer 2165 Games Played","227":"Money Spent On FS Racer 2165","228":"FS Racer 3D Games Played","229":"Money Spent On FS Racer 3D","230":"Tickets Collected","231":"Tickets Used","232":"Items Bought Using Tickets","233":"Baseball Toss Special Targets Hit","234":"Baseball Toss Umpires Hit","235":"Baseball Toss Balls","236":"Baseball Toss Strikes","237":"Shooting Gallery Shots Taken","238":"Shooting Gallery Bottles Broken","239":"Roller Coaster Rides","240":"Octopus Rides","241":"Fortunes Read","129":"Kisses Received","130":"Bottoms Pinched","131":"Gifts Given To People","133":"Successful Authority Apologies","134":"Nerds Greeted","135":"Nerds Taunted","136":"Bullies Greeted","137":"Bullies Taunted","138":"Preps Greeted","139":"Preps Taunted","140":"Greasers Greeted","141":"Greasers Taunted","142":"Jocks Greeted","143":"Jocks Taunted","144":"Townies Greeted","145":"Townies Taunted","146":"Teachers Greeted","147":"Teachers Taunted","148":"Prefects Greeted","149":"Prefects Taunted","150":"Cops Greeted","151":"Cops Taunted","154":"Trouble Points Accumulated","155":"Called To The Principal's Office","158":"Busted By Teacher","159":"Escaped From Teacher","160":"Busted By Prefect","161":"Escaped From Prefect","162":"Busted By Cop","163":"Escaped From Cop","164":"Busted By Orderly","165":"Escaped From Orderly","196":"Greetings","197":"Taunts"},"ref100":{"errands":"01000100010001000100010003000100010001000100010001000100010001000100010001000100010001000000000001000100010001000100010002000100010001000100010001000100010001000000000001000100000000000100010000000000010001000000000001000100010001000100010001000100000000000100010001000100010001000100000001000100000000000000000001000100010001000100010001000100010001000100010001000100010001000100010001000100010001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"}};</script>
+<script>/* ===================== Bully PS4 (PS2 Classic) save core =====================
+ * Pure logic, no DOM. Used by the UI and by the Node test harness.
+ * PS2 memory card (VMC) filesystem with ECC, Bully save container parsing,
+ * Bully name hash, and typed accessors.
+ */
+var Core = (function () {
+  'use strict';
+
+  /* ---------- PS2 memory-card ECC (Hamming, 3 bytes per 128-byte chunk) ---------- */
+  var PT = new Uint8Array(256), CPM = new Uint8Array(256);
+  (function () {
+    var masks = [0x55, 0x33, 0x0F, 0x00, 0xAA, 0xCC, 0xF0];
+    for (var b = 0; b < 256; b++) {
+      var a = b; a ^= a >> 1; a ^= a >> 2; a ^= a >> 4; PT[b] = a & 1;
+    }
+    for (b = 0; b < 256; b++) {
+      var m = 0;
+      for (var i = 0; i < masks.length; i++) m |= PT[b & masks[i]] << i;
+      CPM[b] = m;
+    }
+  })();
+  function ecc128(buf, off) {
+    var c = 0x77, l0 = 0x7f, l1 = 0x7f;
+    for (var i = 0; i < 128; i++) {
+      var b = buf[off + i];
+      c ^= CPM[b];
+      if (PT[b]) { l0 ^= ~i; l1 ^= i; }
+    }
+    return [c & 0xff, l0 & 0x7f, l1 & 0xff];
+  }
+
+  /* ---------- Bully name hash (ObjectNameToHashID) ----------
+   * h = h*131 + toupper(c)  (mod 2^32), result & 0x7FFFFFFF
+   * Verified: 5720/5720 names of the public World.img hash dump + every
+   * clothing/door/outfit name found in this save. */
+  function bhash(s) {
+    s = String(s).toUpperCase();
+    var h = 0;
+    for (var i = 0; i < s.length; i++) h = (Math.imul(h, 131) + (s.charCodeAt(i) & 0xff)) >>> 0;
+    return (h & 0x7fffffff) >>> 0;
+  }
+
+  function hex(v, n) { var s = (v >>> 0).toString(16).toUpperCase(); while (s.length < (n || 8)) s = '0' + s; return s; }
+  function u8eq(a, b) { if (a.length !== b.length) return false; for (var i = 0; i < a.length; i++) if (a[i] !== b[i]) return false; return true; }
+
+  /* ---------- PS2 memory card ---------- */
+  function MemCard(bytes, name) {
+    this.name = name || 'card';
+    this.raw = new Uint8Array(bytes);          // working copy
+    this.orig = new Uint8Array(bytes);         // pristine copy (never written)
+    var dv = new DataView(this.raw.buffer);
+    var magic = String.fromCharCode.apply(null, this.raw.subarray(0, 28));
+    if (magic !== 'Sony PS2 Memory Card Format ') throw new Error('Not a PS2 memory card image (bad superblock magic)');
+    this.version = String.fromCharCode.apply(null, this.raw.subarray(28, 40)).replace(/\0+$/, '');
+    this.pageLen = dv.getUint16(0x28, true);
+    this.ppc = dv.getUint16(0x2a, true);
+    this.ppb = dv.getUint16(0x2c, true);
+    this.clusters = dv.getUint32(0x30, true);
+    this.allocOff = dv.getUint32(0x34, true);
+    this.allocEnd = dv.getUint32(0x38, true);
+    this.rootCl = dv.getUint32(0x3c, true);
+    this.bb1 = dv.getUint32(0x40, true);
+    this.bb2 = dv.getUint32(0x44, true);
+    this.ifc = []; for (var i = 0; i < 32; i++) this.ifc.push(dv.getUint32(0x50 + 4 * i, true));
+    this.cardType = this.raw[0x150]; this.cardFlags = this.raw[0x151];
+    var plain = this.clusters * this.ppc * this.pageLen;
+    if (this.raw.length === plain) this.spare = 0;
+    else if (this.raw.length === this.clusters * this.ppc * (this.pageLen + 16)) this.spare = 16;
+    else throw new Error('Unexpected card size ' + this.raw.length);
+    this.rawPage = this.pageLen + this.spare;
+    this.clSize = this.pageLen * this.ppc;
+  }
+  MemCard.prototype.pageOffset = function (n) { return n * this.rawPage; };
+  MemCard.prototype.readCluster = function (c, src) {
+    src = src || this.raw;
+    var out = new Uint8Array(this.clSize);
+    for (var j = 0; j < this.ppc; j++) {
+      var o = this.pageOffset(c * this.ppc + j);
+      out.set(src.subarray(o, o + this.pageLen), j * this.pageLen);
+    }
+    return out;
+  };
+  MemCard.prototype.u32 = function (arr, o) { return (arr[o] | arr[o + 1] << 8 | arr[o + 2] << 16 | arr[o + 3] << 24) >>> 0; };
+  MemCard.prototype.fat = function (n) {
+    var per = this.clSize / 4;
+    var ind = Math.floor(n / per / per);
+    var ic = this.readCluster(this.ifc[ind]);
+    var fc = this.u32(ic, (Math.floor(n / per) % per) * 4);
+    var f = this.readCluster(fc);
+    return this.u32(f, (n % per) * 4);
+  };
+  MemCard.prototype.chain = function (c) {
+    var out = [], guard = 0;
+    while (true) {
+      out.push(c);
+      var e = this.fat(c);
+      if (!(e & 0x80000000)) throw new Error('FAT chain hits free cluster at ' + c);
+      e = (e & 0x7fffffff) >>> 0;
+      if (e === 0x7fffffff) break;
+      c = e;
+      if (++guard > this.clusters) throw new Error('FAT loop');
+    }
+    return out;
+  };
+  MemCard.prototype.readFileRaw = function (cl, len, src) {
+    var ch = this.chain(cl), out = new Uint8Array(ch.length * this.clSize);
+    for (var i = 0; i < ch.length; i++) out.set(this.readCluster(this.allocOff + ch[i], src), i * this.clSize);
+    return out.subarray(0, len);
+  };
+  function ts(b, o) {
+    return { sec: b[o + 1], min: b[o + 2], hour: b[o + 3], day: b[o + 4], mon: b[o + 5], year: b[o + 6] | b[o + 7] << 8 };
+  }
+  function tsStr(t) { function p(n) { return (n < 10 ? '0' : '') + n; } return t.year + '-' + p(t.mon) + '-' + p(t.day) + ' ' + p(t.hour) + ':' + p(t.min) + ':' + p(t.sec); }
+  MemCard.prototype.dirents = function (cl, count) {
+    var b = this.readFileRaw(cl, count * 512), res = [];
+    for (var i = 0; i < count; i++) {
+      var o = i * 512;
+      var mode = b[o] | b[o + 1] << 8;
+      var name = ''; for (var k = 0; k < 32 && b[o + 0x40 + k]; k++) name += String.fromCharCode(b[o + 0x40 + k]);
+      res.push({ idx: i, mode: mode, length: this.u32(b, o + 4), created: ts(b, o + 8), cluster: this.u32(b, o + 16),
+        modified: ts(b, o + 24), attr: this.u32(b, o + 32), name: name });
+    }
+    return res;
+  };
+  MemCard.prototype.tree = function () {
+    var root = this.dirents(this.rootCl, 1)[0];
+    var ents = this.dirents(this.rootCl, root.length), out = [];
+    for (var i = 0; i < ents.length; i++) {
+      var e = ents[i];
+      if (!(e.mode & 0x8000) || e.name === '.' || e.name === '..') continue;
+      if (e.mode & 0x20) {
+        var sub = this.dirents(e.cluster, e.length);
+        e.files = sub.filter(function (s) { return (s.mode & 0x8000) && s.name !== '.' && s.name !== '..'; });
+      }
+      out.push(e);
+    }
+    return out;
+  };
+  MemCard.prototype.findFile = function (dirName, fileName) {
+    var t = this.tree();
+    for (var i = 0; i < t.length; i++) if (t[i].name === dirName && t[i].files)
+      for (var j = 0; j < t[i].files.length; j++) if (t[i].files[j].name === fileName) return t[i].files[j];
+    return null;
+  };
+  MemCard.prototype.readFile = function (ent, src) { return this.readFileRaw(ent.cluster, ent.length, src); };
+  /* In-place overwrite of an existing file (same length). Only pages whose
+   * bytes actually change are touched; their ECC is regenerated, the 4 pad
+   * bytes of the spare area are preserved (they are 00000000 or 000000FF on
+   * real cards). Returns the number of pages rewritten. */
+  MemCard.prototype.writeFile = function (ent, data) {
+    if (data.length !== ent.length) throw new Error('Size change not supported (' + ent.name + ')');
+    var ch = this.chain(ent.cluster), pages = 0;
+    for (var i = 0; i < ch.length; i++) {
+      for (var j = 0; j < this.ppc; j++) {
+        var fo = i * this.clSize + j * this.pageLen;
+        if (fo >= data.length) break;
+        var pn = (this.allocOff + ch[i]) * this.ppc + j, po = this.pageOffset(pn);
+        var n = Math.min(this.pageLen, data.length - fo);
+        var changed = false;
+        for (var k = 0; k < n; k++) if (this.raw[po + k] !== data[fo + k]) { changed = true; break; }
+        if (!changed) continue;
+        this.raw.set(data.subarray(fo, fo + n), po);
+        if (this.spare) this.fixEcc(pn);
+        pages++;
+      }
+    }
+    return pages;
+  };
+  MemCard.prototype.fixEcc = function (pn) {
+    var po = this.pageOffset(pn), so = po + this.pageLen;
+    var erasedSpare = true;
+    for (var k = 0; k < 16; k++) if (this.raw[so + k] !== 0xff) { erasedSpare = false; break; }
+    for (var c = 0; c < this.pageLen / 128; c++) {
+      var e = ecc128(this.raw, po + c * 128);
+      this.raw[so + c * 3] = e[0]; this.raw[so + c * 3 + 1] = e[1]; this.raw[so + c * 3 + 2] = e[2];
+    }
+    if (erasedSpare) for (k = 12; k < 16; k++) this.raw[so + k] = 0;
+  };
+  MemCard.prototype.eccReport = function (src) {
+    src = src || this.raw;
+    var r = { pages: 0, ok: 0, erased: 0, bad: 0, badList: [] };
+    if (!this.spare) return r;
+    var n = this.raw.length / this.rawPage;
+    for (var p = 0; p < n; p++) {
+      r.pages++;
+      var po = p * this.rawPage, so = po + this.pageLen, allFF = true;
+      for (var k = 0; k < 16; k++) if (src[so + k] !== 0xff) { allFF = false; break; }
+      if (allFF) { var dFF = true; for (k = 0; k < this.pageLen; k++) if (src[po + k] !== 0xff) { dFF = false; break; } if (dFF) { r.erased++; continue; } }
+      var good = true;
+      for (var c = 0; c < this.pageLen / 128 && good; c++) {
+        var e = ecc128(src, po + c * 128);
+        if (src[so + c * 3] !== e[0] || src[so + c * 3 + 1] !== e[1] || src[so + c * 3 + 2] !== e[2]) good = false;
+      }
+      if (good) r.ok++; else { r.bad++; if (r.badList.length < 20) r.badList.push(p); }
+    }
+    return r;
+  };
+  MemCard.prototype.usedClusters = function () {
+    var n = 0; for (var c = 0; c < this.allocEnd; c++) if (this.fat(c) & 0x80000000) n++; return n;
+  };
+  MemCard.prototype.diffBytes = function () {
+    var n = 0; for (var i = 0; i < this.raw.length; i++) if (this.raw[i] !== this.orig[i]) n++; return n;
+  };
+
+  /* ---------- EMS .psu export (for PCSX2/mymc/uLaunchELF users) ---------- */
+  function psuEntry(mode, size, cluster, created, modified, name) {
+    var b = new Uint8Array(512), dv = new DataView(b.buffer);
+    dv.setUint16(0, mode, true); dv.setUint32(4, size, true);
+    function wt(o, t) { b[o + 1] = t.sec; b[o + 2] = t.min; b[o + 3] = t.hour; b[o + 4] = t.day; b[o + 5] = t.mon; dv.setUint16(o + 6, t.year, true); }
+    wt(8, created); dv.setUint32(16, cluster || 0, true); wt(24, modified);
+    for (var i = 0; i < name.length && i < 32; i++) b[0x40 + i] = name.charCodeAt(i);
+    return b;
+  }
+  MemCard.prototype.exportPSU = function (dir) {
+    var parts = [], self = this;
+    parts.push(psuEntry(dir.mode, dir.files.length + 2, 0, dir.created, dir.modified, dir.name));
+    parts.push(psuEntry(0x8427, 0, 0, dir.created, dir.modified, '.'));
+    parts.push(psuEntry(0x8427, 0, 0, dir.created, dir.modified, '..'));
+    dir.files.forEach(function (f) {
+      parts.push(psuEntry(f.mode, f.length, 0, f.created, f.modified, f.name));
+      var data = self.readFile(f), pad = (1024 - (data.length % 1024)) % 1024;
+      parts.push(data);
+      var p = new Uint8Array(pad); p.fill(0xff); parts.push(p);
+    });
+    var tot = parts.reduce(function (a, p) { return a + p.length; }, 0), out = new Uint8Array(tot), o = 0;
+    parts.forEach(function (p) { out.set(p, o); o += p.length; });
+    return out;
+  };
+
+  /* ---------- Bully save container (BullyFile1..n) ----------
+   * 0x00 u32  unknown 24-bit value (NOT a checksum of any tested form; looks like a timer)
+   * 0x04 u32  0x15 (=21) - format/version tag
+   * 0x08 u32  total file length (0x54E8)
+   * 0x0C      blocks: {u32 type(1/2/3), u32 size(incl. 8-byte header), payload}
+   *           terminated by {0,0}; zero padding to file length.  */
+  var BLOCK_INFO = [
+    { key: 'player', name: 'Player / world state', conf: 'mixed' },
+    { key: 'inventory', name: 'Weapon & item inventory {model ID, ammo}', conf: 'verified' },
+    { key: 'b2', name: 'Misc state (29 ints)', conf: 'unknown' },
+    { key: 'items', name: 'Item counts (80 x u32, index = item model ID - 430)', conf: 'verified' },
+    { key: 'bikes', name: 'Bikes (vehicle model IDs)', conf: 'strong' },
+    { key: 'missions', name: 'Mission manager (500 records)', conf: 'verified' },
+    { key: 'clothing', name: 'Clothing / wardrobe / outfits / tattoos', conf: 'verified' },
+    { key: 'stats', name: 'Player statistics (260 stats)', conf: 'verified' },
+    { key: 'pickups', name: 'Collectible pickups (200 x {collected, available})', conf: 'strong' },
+    { key: 'doors', name: 'Door lock table (400 slots)', conf: 'verified' },
+    { key: 'b10', name: 'Reward/unlock flags (52 bytes)', conf: 'mixed' },
+    { key: 'b11', name: 'Small mixed block (options?)', conf: 'unknown' },
+    { key: 'scores', name: 'Minigame high-score tables', conf: 'strong' },
+    { key: 'b13', name: 'Flag array (40 bytes)', conf: 'unknown' },
+    { key: 'lockers', name: 'Opened lockers {locker hash, state}', conf: 'verified' },
+    { key: 'errands', name: 'Errands: 50 x {u16 attempts, u16 successes}', conf: 'verified' },
+    { key: 'b16', name: 'Flag array (20 bytes)', conf: 'mixed' }
+  ];
+  function BullySave(bytes) {
+    this.b = new Uint8Array(bytes);
+    this.orig = new Uint8Array(bytes);
+    this.dv = new DataView(this.b.buffer);
+    this.parse();
+  }
+  BullySave.prototype.parse = function () {
+    var dv = this.dv, L = this.b.length;
+    this.hdr = { a: dv.getUint32(0, true), ver: dv.getUint32(4, true), size: dv.getUint32(8, true) };
+    this.problems = [];
+    if (L >= 0x54e8 && this.hdr.a !== bullyChecksum(this.b, 0x54e8)) this.problems.push('Stored checksum 0x' + hex(this.hdr.a) + ' does not match the computed 0x' + hex(bullyChecksum(this.b, 0x54e8)) + ' - the game would reject this save as corrupted (export fixes it).');
+    if (this.hdr.size !== L) this.problems.push('Header size ' + this.hdr.size + ' != file length ' + L);
+    var o = 12, blocks = [];
+    while (o + 8 <= L) {
+      var t = dv.getUint32(o, true), s = dv.getUint32(o + 4, true);
+      if (s === 0 && t === 0) break;
+      if (s < 8 || o + s > L || t > 16) { this.problems.push('Bad block header at 0x' + hex(o, 4)); break; }
+      var bi = BLOCK_INFO[blocks.length] || { key: 'x' + blocks.length, name: 'Extra block', conf: 'unknown' };
+      blocks.push({ index: blocks.length, off: o, type: t, size: s, end: o + s, key: bi.key, name: bi.name, conf: bi.conf,
+        count: s >= 12 ? dv.getUint32(o + 8, true) : 0 });
+      o += s;
+    }
+    this.endMarker = o;
+    this.blocks = blocks;
+    this.byKey = {};
+    for (var i = 0; i < blocks.length; i++) this.byKey[blocks[i].key] = blocks[i];
+    var tail = 0; for (i = o + 8; i < L; i++) if (this.b[i]) tail++;
+    this.tailNonZero = tail;
+    var expect = [3, 1, 1, 1, 1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1, 2];
+    var sizes = [0x158, 0x144, 0xbc, 0x18c, 0x28, 0xc48, 0x1be8, 0x5bc, 0x21c, 0xd10, 0x80, 0xc0, 0x3ec, 0x78, 0x330, 0x19c, 0x48];
+    this.layoutMatches = blocks.length === 17 && blocks.every(function (bl, i) { return bl.type === expect[i] && bl.size === sizes[i]; });
+    if (!this.layoutMatches) this.problems.push('Block layout differs from the reference layout (different game version or corrupt file) - typed editors disabled, hex editing only.');
+  };
+  /* ---- Save checksum (header word 0) ----
+   * Game routine at 0x43FDF0 (SLUS-21269): PJW/ELF-style hash with mask 0x0F000000,
+   * over bytes [4, 0x54E8) taken from the LAST byte to the FIRST.
+   * Verified against 4 genuine saves (new game, two console re-saves, 100% save)
+   * and against every console load test (all rejected saves mismatch, all accepted match). */
+  function bullyChecksum(b, end) {
+    var h = 0;
+    for (var i = (end || 0x54e8) - 1; i >= 4; i--) {
+      h = ((h << 4) + b[i]) >>> 0;
+      var g = h & 0x0F000000;
+      if (g) { h ^= g >>> 24; h ^= g; h >>>= 0; }
+    }
+    return h >>> 0;
+  }
+  BullySave.prototype.checksum = function () { return bullyChecksum(this.b, Math.min(this.b.length, 0x54e8)); };
+  BullySave.prototype.checksumOk = function () { return this.u32(0) === this.checksum(); };
+  BullySave.prototype.fixChecksum = function () { var c = this.checksum(); this.setU32(0, c); return c; };
+  BullySave.prototype.u8 = function (o) { return this.b[o]; };
+  BullySave.prototype.setU8 = function (o, v) { this.b[o] = v & 0xff; };
+  BullySave.prototype.u16 = function (o) { return this.dv.getUint16(o, true); };
+  BullySave.prototype.setU16 = function (o, v) { this.dv.setUint16(o, v, true); };
+  BullySave.prototype.u32 = function (o) { return this.dv.getUint32(o, true); };
+  BullySave.prototype.i32 = function (o) { return this.dv.getInt32(o, true); };
+  BullySave.prototype.setU32 = function (o, v) { this.dv.setUint32(o, v >>> 0, true); };
+  BullySave.prototype.setI32 = function (o, v) { this.dv.setInt32(o, v | 0, true); };
+  BullySave.prototype.f32 = function (o) { return this.dv.getFloat32(o, true); };
+  BullySave.prototype.setF32 = function (o, v) { this.dv.setFloat32(o, v, true); };
+  BullySave.prototype.diff = function () {
+    var out = [];
+    for (var i = 0; i < this.b.length; i++) if (this.b[i] !== this.orig[i]) out.push(i);
+    return out;
+  };
+
+  /* ---- Mission manager: block 'missions' ----
+   * +0x08 u32 500 (capacity), +0x0C u32 unknown (timer-like), +0x10: 500 x 6-byte records */
+  BullySave.prototype.missionRecOff = function (i) { return this.byKey.missions.off + 16 + 6 * i; };
+  /* ---- Stats: block 'stats' (+0x08 count 260, +0x0C u32 unknown=38, +0x10 stats[260]) */
+  BullySave.prototype.statOff = function (i) { return this.byKey.stats.off + 16 + 4 * i; };
+  /* ---- Clothing block layout (offsets from block start) ---- */
+  BullySave.prototype.cloth = function () {
+    var bl = this.byKey.clothing, o = bl.off, dv = this.dv;
+    var L = { off: o, nOwn: dv.getUint32(o + 12, true), nOutfit: dv.getUint32(o + 16, true), nTat: dv.getUint32(o + 20, true) };
+    L.worn = o + 0x18;                       // 6 x 16 bytes? no: 6 x 12
+    L.owned = L.worn + 6 * 12;               // nOwn x {u32 hash, u32 slot (0xFF = empty)}
+    L.ownedCount = L.owned + 8 * L.nOwn;     // u32
+    L.hair = L.ownedCount + 4;               // 12-byte slot entry
+    L.outfits = L.hair + 12;                 // nOutfit x 84 bytes
+    L.after = L.outfits + 84 * L.nOutfit;    // u32 unknown (2 in a new game, -1 at 100%)
+    L.tat = L.after + 4;                     // nTat x {u32 tattoo-name hash, u32 position, u32 0}; empty = {0,-1,-1}
+    L.tatCount = L.tat + 12 * L.nTat;        // u32 number of tattoos
+    L.tatEnd = L.tatCount + 4;
+    return L;
+  };
+  BullySave.prototype.doorsInfo = function () {
+    var bl = this.byKey.doors; return { off: bl.off + 12, n: this.u32(bl.off + 8), countOff: bl.off + 12 + 8 * this.u32(bl.off + 8) };
+  };
+  BullySave.prototype.scoresInfo = function () {
+    var bl = this.byKey.scores, o = bl.off;
+    var nt = this.u32(o + 8), ne = this.u32(o + 12), nc = this.u32(o + 16);
+    var nameSize = (nc + 1) * 2;
+    return { nt: nt, ne: ne, nc: nc, names: o + 20, nameSize: nameSize, scores: o + 20 + nt * ne * nameSize, end: bl.end };
+  };
+
+  /* ---------- FileTableBully (load-menu summary) ---------- */
+  function FileTable(bytes) { this.b = new Uint8Array(bytes); this.orig = new Uint8Array(bytes); this.dv = new DataView(this.b.buffer); }
+  FileTable.prototype.slots = function () { return Math.floor((this.b.length - 4) / 56); };
+  FileTable.prototype.recOff = function (i) { return 4 + 56 * i; };
+
+  return { ecc128: ecc128, bhash: bhash, bullyChecksum: bullyChecksum, hex: hex, u8eq: u8eq, MemCard: MemCard, BullySave: BullySave, FileTable: FileTable,
+    tsStr: tsStr, BLOCK_INFO: BLOCK_INFO };
+})();
+if (typeof module !== 'undefined') module.exports = Core;
+</script>
+<script>/* Bully PS4 Save Editor - friendly edition.
+ * Only features that were tested on a real PS4 are exposed. */
+(function () {
+  'use strict';
+  var D = window.BULLY_DATA, H = Core.bhash;
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  function el(tag, attrs) {
+    var e = document.createElement(tag);
+    if (attrs) for (var k in attrs) {
+      var v = attrs[k];
+      if (v == null) continue;
+      if (k === 'text') e.textContent = v; else if (k === 'html') e.innerHTML = v;
+      else if (k === 'cls') e.className = v; else if (k === 'style') e.setAttribute('style', v);
+      else if (k.slice(0, 2) === 'on') e.addEventListener(k.slice(2), v); else e.setAttribute(k, v);
+    }
+    for (var i = 2; i < arguments.length; i++) add(e, arguments[i]);
+    return e;
+  }
+  function add(e, c) { if (c == null || c === false) return; if (Array.isArray(c)) c.forEach(function (x) { add(e, x); }); else e.appendChild(typeof c === 'string' || typeof c === 'number' ? document.createTextNode(String(c)) : c); }
+  function toast(t) { var x = $('#toast'); x.textContent = t; x.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(function () { x.classList.remove('show'); }, 2200); }
+  function money(c) { return '$' + (c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+
+  /* ------------------------------------------------------------------ data */
+  var VERSION = '1.0';
+  var US_DIR = 'BASLUS-21269BULLY000';
+  var GOD_HP = 999999;  // highest health value tested on a PS4
+  var MONEY_MAX = 10000000; var MONEY_STORE_MAX = 2147483647; // save stores cents in a signed 32-bit number
+  // faction IDs from the game (3 = DROPOUT internally, shown as Townies in-game)
+  var CLIQUES = [[1, 'Nerds', '#3f9b4f'], [11, 'Bullies', '#9a9a9a'], [5, 'Preppies', '#3d73c9'], [4, 'Greasers', '#e0b631'], [2, 'Jocks', '#c8402f'], [3, 'Townies', '#8a5a34']];
+  var CLASSES = ['Art', 'Chemistry', 'English', 'Gym', 'Photography', 'Shop'];
+  // rewards per level (Bully Wiki / StrategyWiki); English rewards are not listed there, so they point to the Upgrades menu
+  var CLASS_REWARDS = {
+    Art: ['Kisses refill health up to 125% + a painting', 'Kisses refill health up to 150% + a painting', 'Kisses refill health up to 175% + a painting', 'Kisses refill health up to 200% + a painting', 'Girls kiss you without asking for a gift + art set trophy'],
+    Chemistry: ['Make Firecrackers at the chemistry set', 'Make Stink Bombs', 'Make Itching Powder', 'The chemistry set gives a full stack instead of half', 'Use the chemistry set as often as you like each day'],
+    English: ['English upgrade (see the Upgrades menu)', 'English upgrade (see the Upgrades menu)', 'English upgrade (see the Upgrades menu)', 'English upgrade (see the Upgrades menu)', 'English upgrade + trophy (see the Upgrades menu)'],
+    Gym: ['Headbutt and 3-hit combo + wrestling uniform', 'Better weapon accuracy', 'Knee drop + wrestling headgear trophy', 'Better weapon accuracy', 'Better weapon accuracy + dodgeball trophy'],
+    Photography: ['Photo album', 'The yearbook', 'Bigger photo album', 'Digital camera (colour photos)', 'Double tickets at the carnival + photo trophy'],
+    Shop: ['A BMX in the garage', 'Retro BMX (yellow)', 'Green BMX', 'Blue and white BMX', 'Red BMX + bike frame trophy'] };
+  var WEAPONS = [
+    [281, 'Slingshot', 1], [284, 'Super Slingshot', 1], [283, 'Spud Gun', 1], [294, 'Potatoes (Spud Gun ammo)', 8],
+    [285, 'Bottle Rocket Launcher', 1], [286, 'Bottle Rockets', 12], [279, 'Firecrackers', 5], [287, 'Stink Bombs', 5],
+    [282, 'Marbles', 1], [290, 'Eggs', 12], [372, 'Itching Powder', 5], [350, 'Kick Me Signs', 1], [361, 'Water Balloons', 1],
+    [306, 'Camera', 1], [404, 'Digital Camera', 1], [415, 'Skateboard', 1], [303, 'Rubber Band Ball', 1, 'Reward for all 75 rubber bands']];
+  var COLLECT = [['Garden Gnomes', 0, 24, 'Smash them all for a gnome trophy in Jimmy’s room'], ['Transistors', 25, 30, 'Trade them to the hobo for fighting moves'],
+    ['Rubber Bands', 31, 105, 'All 75 unlock the Rubber Band Ball'], ['G & G Cards', 106, 145, 'Grottos & Gremlins cards'], ['Pumpkins', 146, 172, 'Smash them all for a jack-o’-lantern in Jimmy’s room'],
+    ['Tombstones', 173, 191, 'Knock them all over for a gravestone in Jimmy’s room']];
+  var OUTFITS_100 = ['UNIFORM', 'BOXING NG', 'WRESTLING', 'MASCOT', 'ORDERLY', 'HALLOWEEN', 'PJ', 'PRISON', 'GROTTO MASTER', 'GNOME', 'FAST FOOD', 'GOLD SUIT', 'NINJA_BLK', 'NINJA_WHT', 'NINJA_RED'];
+  // [id, name, game file name, tested?] - names from the Bully Wiki; ones marked "likely" are matched by colour/description
+  var BIKES = [[253, 'Red BMX (Shop 5 bike)', 'bike', true], [252, 'Moped', 'Scooter', true],
+    [249, 'Retro BMX (yellow)', 'retro'], [250, 'Basic BMX (likely the Shop 1 bike)', 'crapbmx'], [248, 'Green BMX #13 (likely)', 'bmxrace'], [254, 'Blue and white BMX (likely)', 'custombike'],
+    [256, 'Mountain Bike', 'mtnbike'], [259, 'Aquaberry Cruiser', 'aquabike'], [258, 'Racer (fast shop bike, likely)', 'racer'], [255, '’70s Bike (likely)', 'banbike'],
+    [257, 'Girls’ Bike / Delivery Bike (likely)', 'oladbike'], [251, 'Police Dirt Bike', 'bikecop', 'shows up, but Jimmy can’t ride it'], [265, 'Go-Kart', 'GoCart']];
+  var ITEMS = [[441, 'Flowers', 999, 'Gift for girls'], [444, 'Boxes of Chocolates', 999, 'Gift for girls'], [461, 'Prize Tickets', 999999, 'Carnival currency']];
+  // ---- untested extras (never confirmed on a PS4)
+  var EXTRA_WEAPONS = [[373, 'Poison Gun', 1, 'Normally found on the roof of Harrington House after Chapter 5'], [374, 'Spud Cannon', 1, 'Mission weapon'], [369, 'BB Gun', 1, 'Not normally obtainable'],
+    [298, 'Newspapers', 10, 'Paper route'], [299, 'Spray Can', 1, 'Used for tagging'], [304, 'Fire Extinguisher', 1], [327, 'Bag of Marbles', 1], [300, 'Super Marbles', 1],
+    [278, 'Baseball Bat', 1], [335, 'Cricket Bat', 1], [277, 'Yardstick', 1], [301, 'Wooden Plank', 1], [293, 'Trash Can Lid', 1], [396, 'Lead Pipe', 1], [302, 'Sledgehammer', 1],
+    [387, 'Devil Fork', 1], [382, 'Umbrella', 1], [280, 'Baseball', 1], [296, 'Dodgeball', 1], [289, 'Brick', 1], [288, 'Apple', 1]];
+  var MISSION_ITEMS = [[445, 'Admission Ticket'], [460, 'Tad’s Gate Key'], [476, 'Orderly Uniform']];
+  var STATS = Object.keys(D.stats).map(function (k) { return [+k, D.stats[k]]; }).sort(function (a, b) { return a[0] - b[0]; });
+  var STAT_FLOAT = { 5: 1, 6: 1, 7: 1, 8: 1, 9: 1, 10: 1, 11: 1 };
+  var statFilter = '';
+  // haircut names, barbers and colours from the Bully Wiki / StrategyWiki barber lists (colour order as the barbers list them)
+  var BROWNS = ['Copper', 'Auburn', 'Chestnut', 'Chocolate'], PUNK = ['Blond', 'Light Brown', 'Medium Brown', 'Black'], WILD = ['Blond', 'Green', 'Blue', 'Red'];
+  var MULLET = 'The Happy Mullet (Bullworth Town)', VALE = 'Hair, Nails & Beauty (Old Bullworth Vale)', CUT = 'The Final Cut (New Coventry)';
+  var HAIR_STYLES = { B_Bald: ['Clean Shave', MULLET], B_Buzz: ['Buzz Cut', MULLET], B_Caesar: ['Caesar', MULLET, BROWNS], B_CrewCut: ['Crew Cut', MULLET, BROWNS], B_FlatTop: ['Flat Top', MULLET, BROWNS], B_MFade: ['Fade', MULLET, BROWNS],
+    R_GoodBoy: ['Good Boy', VALE, BROWNS], R_Hwood: ['Hollywood', VALE, BROWNS], R_HThrob: ['Heart Throb', VALE, BROWNS], R_SShag: ['Short and Shaggy', VALE, BROWNS], R_SSmart: ['Smart', VALE, BROWNS], R_ILeague: ['Ivy League', VALE, BROWNS],
+    P_Details1: ['I’m A Star / Lightning (design 1)', CUT, PUNK], P_Details2: ['I’m A Star / Lightning (design 2)', CUT, PUNK], P_Mh_Spike: ['Spike Hawk', CUT, WILD], P_Fauhawk: ['Faux Hawk', CUT, PUNK],
+    P_Mh_Flat: ['Flat Hawk', CUT, PUNK], P_Spiky: ['Spikes!', CUT, WILD], P_Taper: ['Taper', CUT, PUNK] };
+  var HAIR_ORDER = Object.keys(HAIR_STYLES);
+  var HAIRS = D.cloth.filter(function (c) { return c[2] === 'HAIR'; }).map(function (c) {
+    var m = /^(.*?)_0?(\d+)$/.exec(c[0]), base = m && HAIR_STYLES[m[1]] ? m[1] : c[0], st = HAIR_STYLES[base];
+    var col = st && st[2] && m ? st[2][+m[2] - 1] : null;
+    return { name: c[0], style: st ? st[0] : c[0], barber: st ? st[1] : 'Other', label: (st ? st[0] : c[0]) + (col ? ' - ' + col : ''), cat: c[3], warm: c[4], flags: c[5], order: HAIR_ORDER.indexOf(base) * 10 + (m ? +m[2] : 0) };
+  }).sort(function (a, b) { return a.order - b.order; });
+  var GIVE_CLOTHES = D.cloth.filter(function (c) { return c[2] !== 'HAIR' && !(c[5] & 4); }).map(function (c) { return [c[0], c[1]]; })
+    .concat(D.hats.map(function (n) { return [n, 0]; }));
+
+  /* ----------------------------------------------------------------- state */
+  var S = null;  // { name, zip, card, ent, save, orig }
+  var tab = 'jimmy';
+
+  /* ------------------------------------------------------------ zip support */
+  var CRC_T = (function () { var t = new Uint32Array(256); for (var n = 0; n < 256; n++) { var c = n; for (var k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+  function crc32(b) { var c = 0xffffffff; for (var i = 0; i < b.length; i++) c = CRC_T[(c ^ b[i]) & 0xff] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; }
+  function readZip(buf) {
+    var dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength), e = -1;
+    for (var i = buf.length - 22; i >= Math.max(0, buf.length - 65557); i--) if (dv.getUint32(i, true) === 0x06054b50) { e = i; break; }
+    if (e < 0) throw new Error('Not a zip file');
+    var n = dv.getUint16(e + 10, true), cd = dv.getUint32(e + 16, true), out = [];
+    for (var k = 0; k < n; k++) {
+      if (dv.getUint32(cd, true) !== 0x02014b50) throw new Error('Bad zip directory');
+      var method = dv.getUint16(cd + 10, true), csize = dv.getUint32(cd + 20, true), usize = dv.getUint32(cd + 24, true);
+      var fnl = dv.getUint16(cd + 28, true), exl = dv.getUint16(cd + 30, true), cml = dv.getUint16(cd + 32, true), lho = dv.getUint32(cd + 42, true);
+      var name = new TextDecoder().decode(buf.subarray(cd + 46, cd + 46 + fnl));
+      var lfn = dv.getUint16(lho + 26, true), lex = dv.getUint16(lho + 28, true), ds = lho + 30 + lfn + lex;
+      out.push({ name: name, method: method, data: buf.subarray(ds, ds + csize), usize: usize });
+      cd += 46 + fnl + exl + cml;
+    }
+    return Promise.all(out.map(function (f) {
+      if (f.method === 0) { f.raw = f.data; return f; }
+      if (f.method !== 8) throw new Error('Unsupported zip compression in ' + f.name);
+      var ds = new DecompressionStream('deflate-raw');
+      return new Response(new Blob([f.data]).stream().pipeThrough(ds)).arrayBuffer().then(function (ab) { f.raw = new Uint8Array(ab); return f; });
+    }));
+  }
+  function writeZip(files) {   // stored (no compression) - simple and universally readable
+    var parts = [], central = [], off = 0, enc = new TextEncoder();
+    files.forEach(function (f) {
+      var nm = enc.encode(f.name), crc = crc32(f.raw), h = new Uint8Array(30 + nm.length), dv = new DataView(h.buffer);
+      dv.setUint32(0, 0x04034b50, true); dv.setUint16(4, 20, true); dv.setUint16(8, 0, true); dv.setUint16(10, 0, true); dv.setUint16(12, 0x21, true);
+      dv.setUint32(14, crc, true); dv.setUint32(18, f.raw.length, true); dv.setUint32(22, f.raw.length, true); dv.setUint16(26, nm.length, true); h.set(nm, 30);
+      var c = new Uint8Array(46 + nm.length), cv = new DataView(c.buffer);
+      cv.setUint32(0, 0x02014b50, true); cv.setUint16(4, 20, true); cv.setUint16(6, 20, true); cv.setUint16(14, 0x21, true);
+      cv.setUint32(16, crc, true); cv.setUint32(20, f.raw.length, true); cv.setUint32(24, f.raw.length, true); cv.setUint16(28, nm.length, true);
+      cv.setUint32(38, /\/$/.test(f.name) ? 0x10 : 0, true); cv.setUint32(42, off, true); c.set(nm, 46);
+      parts.push(h, f.raw); central.push(c); off += h.length + f.raw.length;
+    });
+    var cdSize = central.reduce(function (a, c) { return a + c.length; }, 0), end = new Uint8Array(22), ev = new DataView(end.buffer);
+    ev.setUint32(0, 0x06054b50, true); ev.setUint16(8, files.length, true); ev.setUint16(10, files.length, true); ev.setUint32(12, cdSize, true); ev.setUint32(16, off, true);
+    return new Blob(parts.concat(central, [end]), { type: 'application/zip' });
+  }
+
+  /* --------------------------------------------------------------- loading */
+  function readFile(f) { return new Promise(function (res, rej) { var r = new FileReader(); r.onload = function () { res(new Uint8Array(r.result)); }; r.onerror = rej; r.readAsArrayBuffer(f); }); }
+  function load(file) {
+    hideError();
+    if (file.size > 64 * 1024 * 1024) return showError('That file is too big to be a Bully save. Load the decrypted save zip or VMC0.card.');
+    readFile(file).then(function (buf) {
+      if (buf[0] === 0x50 && buf[1] === 0x4b) {
+        if (typeof DecompressionStream === 'undefined') throw new Error('Your browser can’t open zip files. Unzip the save yourself and load VMC0.card instead, or update your browser.');
+        return readZip(buf).then(function (files) {
+          var vmc = files.filter(function (f) { return /(^|\/)VMC0\.card$/i.test(f.name); })[0];
+          if (!vmc) throw new Error(files.some(function (f) { return /\.card$/i.test(f.name); }) ? 'This zip has no VMC0.card inside (only VMC1.card, which is always empty). Use the full decrypted save zip from your save tool.' : 'This zip has no VMC0.card inside. Make sure it’s the decrypted save zip from your save tool (it contains VMC0.card, VMC1.card and sce_sys).');
+          open(vmc.raw, file.name, files);
+        });
+      }
+      open(buf, file.name, null);
+    }).catch(function (e) { showError(e && e.message ? e.message : 'Couldn’t read that file.'); });
+  }
+  function findSlots(card) {
+    var out = [];
+    card.tree().forEach(function (d) {
+      (d.files || []).forEach(function (f) { var m = /^BullyFile(\d+)$/.exec(f.name); if (m) out.push({ dir: d.name, ent: f, n: +m[1] }); });
+    });
+    return out.sort(function (a, b) { return a.dir === US_DIR && b.dir !== US_DIR ? -1 : b.dir === US_DIR && a.dir !== US_DIR ? 1 : a.n - b.n; });
+  }
+  // load-menu record for a slot (6 records of 56 bytes); only trusted when its play time matches the save
+  function tableRec(ft, save, n) {
+    if (!ft || ft.length < 4 + 56 * n) return null;
+    var dv = new DataView(ft.buffer, ft.byteOffset + 4 + 56 * (n - 1), 56);
+    if (dv.getUint32(16, true) !== save.u32(0x68) || dv.getUint32(20, true) !== save.u32(0x6c)) return null;
+    return { completion: dv.getFloat32(0, true), chapter: dv.getUint32(4, true) + 1 };
+  }
+  function open(bytes, name, zipFiles) {
+    var card;
+    try { card = new Core.MemCard(bytes, name); } catch (e) { return showError('That file isn’t a PS2 memory card. Load VMC0.card or the decrypted save zip.'); }
+    var slots;
+    try { slots = findSlots(card); } catch (e) { return showError('This memory card looks damaged, so it can’t be edited safely.'); }
+    if (!slots.length) {
+      var empty = false; try { empty = card.tree().length === 0; } catch (e) {}
+      return showError(empty ? 'This is the empty second memory card (VMC1). Load VMC0.card instead - that’s where Bully keeps your save.' : 'No Bully save found on this memory card. Save once in Bully, then decrypt that save and try again.');
+    }
+    var opened = slots.map(function (sl) {
+      try {
+        var save = new Core.BullySave(card.readFile(sl.ent));
+        var ft = card.findFile(sl.dir, 'FileTableBully'), ftb = ft ? card.readFile(ft) : null;
+        return { slot: sl, save: save, ft: ftb, ok: save.layoutMatches, rec: save.layoutMatches ? tableRec(ftb, save, sl.n) : null };
+      } catch (e) { return { slot: sl, ok: false }; }
+    });
+    var good = opened.filter(function (x) { return x.ok; });
+    if (!good.length) return showError('This save has an unexpected layout (maybe a different game version), so it can’t be edited safely.');
+    if (good.length === 1) return start(good[0], card, name, zipFiles);
+    pickSlot(good, card, name, zipFiles);
+  }
+  function start(x, card, name, zipFiles) {
+    S = { name: name, zip: zipFiles, card: card, ent: x.slot.ent, dir: x.slot.dir, slotN: x.slot.n, multi: false, save: x.save, orig: new Uint8Array(x.save.b), rec: x.rec, badSum: !x.save.checksumOk(),
+      ft: x.ft ? new Uint8Array(x.ft) : null, ftOrig: x.ft ? new Uint8Array(x.ft) : null, recOff: x.rec ? 4 + 56 * (x.slot.n - 1) : null };
+    tab = 'jimmy'; render(); window.scrollTo(0, 0);
+    toast('Save loaded - have fun!');
+  }
+  function pickSlot(list, card, name, zipFiles) {
+    var m = $('#main'); m.innerHTML = '';
+    var c = card_('tilt', el('h2', null, 'Pick a save slot'), el('p', null, 'This memory card has more than one Bully save. Which one do you want to edit?'));
+    list.forEach(function (x) {
+      var s = x.save, info = s.u32(0x68) + 'h ' + ('0' + s.u32(0x6c)).slice(-2) + 'm played · ' + money(getMoney(s.b)) + (x.rec ? ' · ' + x.rec.completion.toFixed(1) + '% · Chapter ' + x.rec.chapter : '');
+      c.appendChild(field('Save slot ' + x.slot.n, info, el('button', { cls: 'btn red', onclick: function () { start(x, card, name, zipFiles); S.multi = true; render(); } }, 'Edit this one')));
+    });
+    c.appendChild(el('button', { cls: 'btn small', style: 'margin-top:12px', onclick: function () { S = null; render(); } }, '← Back'));
+    m.appendChild(c);
+  }
+  function showError(msg) { if (S) { S = null; } if (!$('#loadErr')) render(); var e = $('#loadErr'); e.textContent = msg; e.classList.remove('hidden'); e.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+  function hideError() { var e = $('#loadErr'); if (e) e.classList.add('hidden'); }
+
+  /* --------------------------------------------------------------- helpers */
+  function sv() { return S.save; }
+  function changed() { if (S) S.exported = false; clearTimeout(changed.t); changed.t = setTimeout(render, 0); }  // deferred so Tab can move focus first
+  function field(label, help, ctrl, extra) { return el('div', { cls: 'field' }, el('div', { cls: 'lab' }, label, help ? el('small', null, help) : null), ctrl, extra || null); }
+  function slider(min, max, get, set, step) {
+    var wrap = el('span', { cls: 'row', style: 'gap:10px;flex:1 1 260px' }), val = el('span', { cls: 'val' }, String(get()));
+    var r = el('input', { type: 'range', min: min, max: max, step: step || 1, value: get(), 'aria-label': 'value' });
+    r.addEventListener('input', function () { val.textContent = r.value; });
+    r.addEventListener('change', function () { set(+r.value); changed(); });
+    wrap.appendChild(r); wrap.appendChild(val); return wrap;
+  }
+  function meter(color, get, set, label) {
+    var v = get(), val = el('span', { cls: 'val', style: 'color:' + color }, v + '%');
+    var r = el('input', { type: 'range', min: 0, max: 100, step: 1, value: v, 'aria-label': label, style: 'accent-color:' + color });
+    r.addEventListener('input', function () { val.textContent = r.value + '%'; });
+    r.addEventListener('change', function () { set(+r.value); changed(); });
+    return el('span', { cls: 'meter' }, r, val);
+  }
+  function bar(n, of) { return el('span', { cls: 'bar', title: n + ' / ' + of }, el('i', { style: 'width:' + Math.round(100 * n / of) + '%' })); }
+  function card_(cls) { return card.apply(null, arguments); }
+  function card(cls) { var c = el('div', { cls: 'card ' + (cls || '') }); for (var i = 1; i < arguments.length; i++) add(c, arguments[i]); return c; }
+
+  /* ------------------------------------------------------- feature: values */
+  function getMoney(b) { return new DataView(b.buffer).getInt32(0x38, true); }
+  function respectOff(f) { return 0x90 + 4 * f; }
+  function classOff(i) { return 0x78 + 4 * i; }
+  function cloth(s) { return s.cloth(); }
+  function ownedList(s) { var L = cloth(s), out = []; for (var i = 0; i < L.nOwn; i++) { var o = L.owned + 8 * i, sl = s.u32(o + 4); if (sl !== 0xff) out.push([s.u32(o), sl]); } return out; }
+  function writeOwned(s, list) { var L = cloth(s); for (var i = 0; i < L.nOwn; i++) { var o = L.owned + 8 * i; if (i < list.length) { s.setU32(o, list[i][0]); s.setU32(o + 4, list[i][1]); } else { s.setU32(o, 0); s.setU32(o + 4, 0xff); } } s.setU32(L.ownedCount, list.length); }
+  function giveAllClothes(s) { var list = ownedList(s), have = {}; list.forEach(function (x) { have[x[0]] = 1; }); GIVE_CLOTHES.forEach(function (c) { var h = H(c[0]); if (!have[h]) { list.push([h, c[1]]); have[h] = 1; } }); writeOwned(s, list); }
+  function clothesOwned(s) { var have = {}; ownedList(s).forEach(function (x) { have[x[0]] = 1; }); return GIVE_CLOTHES.filter(function (c) { return have[H(c[0])]; }).length; }
+  function outfitRecs(s) { var L = cloth(s), out = []; for (var q = 0; q < L.nOutfit; q++) { var o = L.outfits + 84 * q; out.push({ o: o, h: s.u32(o), f: s.u32(o + 80) }); } return out; }
+  var OUT_H = OUTFITS_100.map(function (n) { return H(n); });
+  function outfitsUnlocked(s) { return outfitRecs(s).filter(function (r) { return OUT_H.indexOf(r.h) >= 0 && (r.f & 8); }).length; }
+  function unlockOutfits(s) { outfitRecs(s).forEach(function (r) { if (OUT_H.indexOf(r.h) >= 0) s.setU32(r.o + 80, r.f | 8); }); }
+  function hairName(s) { var h = s.u32(cloth(s).hair); var m = HAIRS.filter(function (x) { return H(x.name) === h; })[0]; return m ? m.name : null; }
+  function setHair(s, name) { var x = HAIRS.filter(function (h) { return h.name === name; })[0], o = cloth(s).hair; s.setU32(o, H(x.name)); s.setU32(o + 4, H('CS_' + x.name)); s.setU8(o + 8, 0); s.setU8(o + 9, x.cat); s.setU8(o + 10, x.warm); s.setU8(o + 11, x.flags); }
+  function invList(s) { var bl = s.byKey.inventory, o = bl.off + 12, cap = Math.floor((bl.size - 12) / 8), out = []; for (var i = 0; i < cap; i++) { var id = s.u32(o + 8 * i); if (id === 0xffffffff || (id === 0 && !s.u32(o + 8 * i + 4))) break; out.push([id, s.u32(o + 8 * i + 4)]); } return out; }
+  function writeInv(s, list) { var bl = s.byKey.inventory, o = bl.off + 12, n = Math.floor((bl.size - 12) / 8); for (var i = 0; i < n; i++) { if (i < list.length) { s.setU32(o + 8 * i, list[i][0]); s.setU32(o + 8 * i + 4, list[i][1]); } else if (i === list.length) { s.setU32(o + 8 * i, 0xffffffff); s.setU32(o + 8 * i + 4, 0); } else { s.setU32(o + 8 * i, 0); s.setU32(o + 8 * i + 4, 0); } } }
+  function setWeapon(s, id, amount) {
+    var list = invList(s), i = list.map(function (x) { return x[0]; }).indexOf(id);
+    var cap = Math.floor((s.byKey.inventory.size - 12) / 8) - 1;
+    if (amount > 0) { if (i >= 0) list[i][1] = amount; else if (list.length < cap) list.push([id, amount]); else { toast('Inventory is full'); return; } } else if (i >= 0) list.splice(i, 1);
+    writeInv(s, list);
+  }
+  function weaponAmt(s, id) { var x = invList(s).filter(function (w) { return w[0] === id; })[0]; return x ? x[1] : 0; }
+  function itemOff(s, id) { return s.byKey.items.off + 12 + 4 * (id - 430); }
+  function pickOff(s, i) { return s.byKey.pickups.off + 12 + 2 * i; }
+  function collected(s, a, b) { var n = 0; for (var i = a; i <= b; i++) if (s.u8(pickOff(s, i))) n++; return n; }
+  function collect(s, a, b) { for (var i = a; i <= b; i++) { s.setU8(pickOff(s, i), 1); s.setU8(pickOff(s, i) + 1, 1); } }
+  function missionPassed(s, i) { return !!(s.u8(s.missionRecOff(i) + 4) & 0x10); }
+  function passMission(s, i) { var o = s.missionRecOff(i); if (s.u16(o) < 1) s.setU16(o, 1); if (s.u16(o + 2) < 1) s.setU16(o + 2, 1); s.setU8(o + 4, (s.u8(o + 4) | 0x10) & ~0x02); }
+  function hoboCount(s) { var n = 0; for (var i = 14; i <= 19; i++) if (missionPassed(s, i)) n++; return n; }
+  function errandsDone(s) { var o = s.byKey.errands.off + 12, n = 0; for (var i = 0; i < 50; i++) if (s.u16(o + 4 * i + 2)) n++; return n; }
+  var REF_ERR = []; for (var ri = 0; ri < 50; ri++) REF_ERR.push([parseInt(D.ref100.errands.substr(8 * ri + 2, 2) + D.ref100.errands.substr(8 * ri, 2), 16), parseInt(D.ref100.errands.substr(8 * ri + 6, 2) + D.ref100.errands.substr(8 * ri + 4, 2), 16)]);
+  var REF_ERR_DONE = REF_ERR.filter(function (r) { return r[1] > 0; }).length;
+  function completeErrands(s) { var o = s.byKey.errands.off + 12; REF_ERR.forEach(function (r, i) { if (s.u16(o + 4 * i) < r[0]) s.setU16(o + 4 * i, r[0]); if (s.u16(o + 4 * i + 2) < r[1]) s.setU16(o + 4 * i + 2, r[1]); }); }
+  function doorStats(s) { var d = s.doorsInfo(), n = s.u32(d.countOff), locked = 0; for (var i = 0; i < n; i++) if (s.u32(d.off + 8 * i) && s.u32(d.off + 8 * i + 4)) locked++; return { n: n, locked: locked }; }
+  function unlockDoors(s) { var d = s.doorsInfo(), n = s.u32(d.countOff); for (var i = 0; i < n; i++) if (s.u32(d.off + 8 * i)) s.setU32(d.off + 8 * i + 4, 0); }
+  function bikeSlot(s, k) { return s.u32(s.byKey.bikes.off + 12 + 4 * k); }
+  function setBikeSlot(s, k, id) { s.setU32(s.byKey.bikes.off + 12 + 4 * k, id); }
+  function bikeName(id) { if (id === 0xffffffff) return 'Empty'; var b = BIKES.filter(function (x) { return x[0] === id; })[0]; return b ? b[1] : 'Vehicle #' + id; }
+
+  function ftU32(o) { return new DataView(S.ft.buffer, S.ft.byteOffset).getUint32(o, true); }
+  function ftSet(o, v) { new DataView(S.ft.buffer, S.ft.byteOffset).setUint32(o, v >>> 0, true); }
+  function ftOrigU32(o) { return new DataView(S.ftOrig.buffer, S.ftOrig.byteOffset).getUint32(o, true); }
+  function getStat(s, i) { return STAT_FLOAT[i] ? s.f32(s.statOff(i)) : s.u32(s.statOff(i)); }
+  function fmtStat(i, v) { return STAT_FLOAT[i] ? (Math.round(v * 10) / 10).toLocaleString('en-US') : v.toLocaleString('en-US'); }
+  function setPlayTime(s, h, m, sec) {
+    s.setU32(0x68, h); s.setU32(0x6c, m); s.setU32(0x70, sec); s.setU32(s.statOff(2), ((h * 3600 + m * 60 + sec) * 1000) >>> 0);
+    if (S.recOff != null) { ftSet(S.recOff + 16, h); ftSet(S.recOff + 20, m); ftSet(S.recOff + 24, sec); }
+  }
+  function pad2(n) { return ('0' + n).slice(-2); }
+  function ftDateStr(get) { var o = S.recOff + 28; return get(o + 8) + '/' + get(o + 4) + '/' + (2000 + get(o)) + ' ' + pad2(get(o + 12)) + ':' + pad2(get(o + 16)); }
+
+  function maxEverything(s) {
+    s.setI32(0x38, MONEY_MAX);
+    CLIQUES.forEach(function (c) { s.setU32(respectOff(c[0]), 100); });
+    for (var i = 0; i < 6; i++) s.setU32(classOff(i), 5);
+    giveAllClothes(s); unlockOutfits(s);
+    WEAPONS.forEach(function (w) { setWeapon(s, w[0], w[2]); });
+    ITEMS.forEach(function (it) { if (s.u32(itemOff(s, it[0])) < it[2]) s.setU32(itemOff(s, it[0]), it[2]); });
+    COLLECT.forEach(function (c) { collect(s, c[1], c[2]); });
+    for (var m = 14; m <= 19; m++) passMission(s, m);
+    completeErrands(s);
+    setBikeSlot(s, 0, 253); setBikeSlot(s, 1, 252);
+    unlockDoors(s);
+  }
+
+  /* --------------------------------------------------------------- render */
+  var TABS = [['jimmy', 'Jimmy', '#ffd27a'], ['respect', 'Respect', '#9fd3a8'], ['classes', 'Classes', '#9ec5f0'],
+    ['weapons', 'Weapons & Items', '#f2b38a'], ['collect', 'Collectibles', '#c9b6ef'], ['unlocks', 'Unlocks', '#a8e0dc'], ['extras', 'Untested', '#d9cdb3'], ['save', 'Save & Export', '#ff9a8f']];
+  function render() {
+    var m = $('#main'), ae = document.activeElement, keep = ae && m.contains(ae) ? focusKey(ae) : '', sy = window.scrollY;
+    m.innerHTML = '';
+    if (!S) { m.appendChild(renderStart()); $('#savebar').classList.add('hidden'); return; }
+    var s = sv();
+    m.appendChild(renderSummary(s));
+    var tabs = el('div', { cls: 'tabs', role: 'tablist' });
+    TABS.forEach(function (t) { tabs.appendChild(el('button', { cls: 'tab' + (tab === t[0] ? ' on' : ''), role: 'tab', 'aria-selected': tab === t[0] ? 'true' : 'false', style: '--c:' + t[2], onclick: function () { tab = t[0]; render(); } }, t[1])); });
+    m.appendChild(tabs);
+    var onT = tabs.querySelector('.on'); if (onT && tabs.scrollWidth > tabs.clientWidth) tabs.scrollLeft = Math.max(0, onT.offsetLeft - tabs.offsetLeft - 16);
+    var color = TABS.filter(function (t) { return t[0] === tab; })[0][2];
+    var wrap = el('div', { cls: 'panelwrap', style: '--c:' + color });
+    ({ jimmy: pJimmy, respect: pRespect, classes: pClasses, weapons: pWeapons, collect: pCollect, unlocks: pUnlocks, extras: pExtras, save: pSave })[tab](wrap, s);
+    m.appendChild(wrap);
+    var n = changeList().length;
+    $('#savebar').classList.toggle('hidden', tab === 'save');
+    $('#saveBtn').textContent = n ? 'Save & export (' + n + ' change' + (n > 1 ? 's' : '') + ')' : 'Save & export';
+    $('#saveNote').textContent = n ? 'Ready when you are:' : 'No changes yet';
+    if (keep) { var all = m.querySelectorAll('button,input,select,[tabindex]'); for (var i = 0; i < all.length; i++) if (focusKey(all[i]) === keep) { try { all[i].focus({ preventScroll: true }); } catch (e) {} break; } }
+    if (S && window.scrollY !== sy) window.scrollTo(0, sy);
+  }
+  function focusKey(e) { return e.getAttribute('aria-label') || e.id || (e.tagName + '|' + (e.textContent || '').trim().slice(0, 40)); }
+
+  function renderStart() {
+    var input = el('input', { type: 'file', accept: '.card,.zip,.ps2,application/zip', cls: 'hidden', id: 'fileIn' });
+    input.addEventListener('change', function () { if (input.files[0]) load(input.files[0]); input.value = ''; });
+    var drop = el('div', { cls: 'drop', tabindex: '0', role: 'button', onclick: function () { input.click(); }, onkeydown: function (e) { if (e.key === 'Enter' || e.key === ' ') input.click(); } },
+      el('div', { cls: 'big' }, 'Drop your save here'), el('p', { cls: 'note' }, 'Your decrypted save zip (e.g. Bully_CUSA03507_dec.zip) or just VMC0.card - or click to choose a file.'), input);
+    ['dragenter', 'dragover'].forEach(function (ev) { drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.add('on'); }); });
+    ['dragleave', 'drop'].forEach(function (ev) { drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.remove('on'); }); });
+    drop.addEventListener('drop', function (e) { e.stopPropagation(); if (e.dataTransfer.files[0]) load(e.dataTransfer.files[0]); });
+    return el('div', null,
+      card('tilt', el('h2', null, 'Welcome to Bullworth’s save room'),
+        el('p', null, 'Edit your Bully (PS4) save with a few clicks: money, respect, classes, clothes, weapons, collectibles and more. Everything here was tested on a real PS4 - the few untested extras are clearly marked.'),
+        el('div', { style: 'margin-top:14px' }, drop),
+        el('div', { id: 'loadErr', cls: 'err hidden', style: 'margin-top:12px' })),
+      card('sticky tilt2 notape', el('h3', null, 'How it works'),
+        el('ol', { cls: 'steps' },
+          el('li', null, 'Decrypt your PS4 save with your save tool (e.g. garlicsaves) and download it.'),
+          el('li', null, 'Drop the decrypted zip (or VMC0.card) above.'),
+          el('li', null, 'Make your changes, then hit "Save & export".'),
+          el('li', null, 'Re-encrypt the downloaded file with the same tool and copy it back to your PS4.')),
+        el('p', { cls: 'note', style: 'margin-top:8px' }, 'Everything runs in your browser - nothing is uploaded. Your original file is never changed; you always download a new copy.')),
+      card('notape', el('h3', null, 'Good to know'),
+        el('ul', { cls: 'tips' },
+          el('li', null, el('b', null, 'Keep a backup. '), 'Hang on to your original encrypted save (or back it up to USB / PS Plus) before copying an edited one over it.'),
+          el('li', null, el('b', null, 'Load Bully from the main menu. '), 'Edits only show up after the save is loaded from the Load Game screen.'),
+          el('li', null, el('b', null, '"Load failed! Data may be corrupted"? '), 'Make sure you re-encrypted the file this editor gave you and didn’t edit it again with another tool afterwards.'),
+          el('li', null, el('b', null, 'Rewards come from the game. '), 'Trophies in Jimmy’s room, upgrades and PS4 trophies are handed out when the save loads - so leave unlocked things unlocked.'))));
+  }
+
+  function renderSummary(s) {
+    var total = 0; COLLECT.forEach(function (c) { total += collected(s, c[1], c[2]); });
+    var stats = [
+      ['Money', money(getMoney(s.b))],
+      ['Play time', s.u32(0x68) + 'h ' + ('0' + s.u32(0x6c)).slice(-2) + 'm'],
+      ['Completion', S.rec ? S.rec.completion.toFixed(2) + '%' : '-'],
+      ['Chapter', S.rec ? String(S.rec.chapter) : '-'],
+      ['Collectibles', total + ' / 192'],
+      ['Clothes', clothesOwned(s) + ' / ' + GIVE_CLOTHES.length]];
+    var g = el('div', { cls: 'grid', style: 'grid-template-columns:repeat(auto-fill,minmax(150px,1fr))' });
+    stats.forEach(function (x) { g.appendChild(el('div', { cls: 'stat' }, el('div', { cls: 'k' }, x[0]), el('div', { cls: 'v' }, x[1]))); });
+    return card('folder notape',
+      el('div', { cls: 'row', style: 'justify-content:space-between;margin-bottom:10px;padding-right:0' },
+        el('div', { cls: 'row', style: 'gap:14px' }, el('h2', { style: 'margin:0' }, 'Jimmy’s permanent record'), el('span', { cls: 'stamp' }, 'Bullworth Academy')),
+        el('div', { cls: 'row' },
+          el('button', { cls: 'btn gold', onclick: function () { maxEverything(s); changed(); toast('Everything maxed out!'); } }, '★ Max out everything'),
+          el('button', { cls: 'btn small', onclick: function () { if (!changeList().length || confirm('Load a different save? Changes you haven’t exported will be lost.')) { S = null; render(); } } }, 'Load another save'))),
+      g, el('p', { cls: 'note', style: 'margin-top:8px' }, 'Loaded: ' + S.name + (S.multi ? ' (save slot ' + S.slotN + ')' : '') + '. Completion % and chapter on the load screen update the next time you save in-game.'),
+      S.dir !== US_DIR ? el('p', { cls: 'chip warn', style: 'margin-top:6px' }, 'This isn’t the US version of the save (' + S.dir + '). The editor only knows the US layout, so test carefully.') : null,
+      S.badSum ? el('p', { cls: 'chip warn', style: 'margin-top:6px' }, 'This save’s checksum was already wrong when it was loaded (it may have been edited by another tool). Exporting will fix it.') : null);
+  }
+
+  function warnChip(v, max) { return v > max ? el('span', { cls: 'chip warn' }, 'Game limit is ' + max + ' - it resets to ' + max) : null; }
+  function numBox(get, set, opts) {
+    opts = opts || {};
+    var n = el('input', { type: 'number', min: opts.min != null ? opts.min : 0, max: opts.max != null ? opts.max : null, step: opts.step || 1, value: get(), 'aria-label': opts.label || 'value' });
+    if (opts.width) n.style.width = opts.width;
+    n.addEventListener('change', function () { var v = parseFloat(n.value); if (isNaN(v)) { n.value = get(); return; } if (opts.max != null) v = Math.min(opts.max, v); v = Math.max(opts.min != null ? opts.min : 0, v); set(opts.float ? v : Math.round(v)); changed(); });
+    return n;
+  }
+  function isGod(s) { return s.f32(0x20) >= GOD_HP && s.f32(0x24) >= GOD_HP; }
+  function pJimmy(w, s) {
+    var mIn = el('input', { type: 'number', min: 0, step: '0.01', value: (getMoney(s.b) / 100).toFixed(2), 'aria-label': 'Money in dollars' });
+    mIn.addEventListener('change', function () { var v = Math.max(0, Math.min(MONEY_STORE_MAX, Math.round((parseFloat(mIn.value) || 0) * 100))); s.setI32(0x38, v); changed(); });
+    var mWarn = getMoney(s.b) > MONEY_MAX ? el('span', { cls: 'chip warn' }, 'The game resets this to $100,000 when it loads') : null;
+    w.appendChild(card('', el('h2', null, 'Money & health'),
+      field('Pocket money', 'The game’s limit is $100,000 - anything higher gets set back to $100,000 when the save loads.', el('span', { cls: 'row' }, '$', mIn, mWarn),
+        el('span', { cls: 'row' },
+          el('button', { cls: 'btn small', onclick: function () { s.setI32(0x38, Math.min(MONEY_STORE_MAX, getMoney(s.b) + 100000)); changed(); } }, '+ $1,000'),
+          el('button', { cls: 'btn small red', onclick: function () { s.setI32(0x38, MONEY_MAX); changed(); toast('Money set to the game max'); } }, 'Game max'))),
+      field('Health', 'Jimmy’s current health. A full bar is the same as max health.',
+        numBox(function () { return Math.round(s.f32(0x20)); }, function (v) { s.setF32(0x20, v); }, { label: 'Health', min: 1 }),
+        el('button', { cls: 'btn small red', onclick: function () { s.setF32(0x20, s.f32(0x24)); changed(); toast('Fully healed'); } }, 'Full health')),
+      field('Max health', '200 is normal. Values above ' + GOD_HP.toLocaleString('en-US') + ' are untested.',
+        numBox(function () { return Math.round(s.f32(0x24)); }, function (v) { s.setF32(0x24, v); }, { label: 'Max health', min: 1 })),
+      field('God mode', 'Sets health and max health to ' + GOD_HP.toLocaleString('en-US') + ' - the highest value tested on a PS4. Jimmy can take a beating all day.',
+        isGod(s) ? el('span', { cls: 'chip' }, 'On') : null,
+        el('button', { cls: 'btn' + (isGod(s) ? ' done' : ' gold'), disabled: isGod(s) ? 'disabled' : null, onclick: function () { s.setF32(0x24, GOD_HP); s.setF32(0x20, GOD_HP); changed(); toast('God mode on'); } }, isGod(s) ? 'God mode on' : '★ God mode'))));
+
+    var sel = el('select', { 'aria-label': 'Haircut' }), cur = hairName(s);
+    if (!cur) sel.appendChild(el('option', { value: '' }, '(current haircut)'));
+    var groups = {}, gOrder = [];
+    HAIRS.forEach(function (x) { if (!groups[x.barber]) { groups[x.barber] = el('optgroup', { label: x.barber }); gOrder.push(x.barber); } groups[x.barber].appendChild(el('option', { value: x.name }, x.label)); });
+    gOrder.forEach(function (g) { sel.appendChild(groups[g]); });
+    sel.value = cur || '';
+    sel.addEventListener('change', function () { if (sel.value) { setHair(s, sel.value); changed(); toast('New haircut!'); } });
+    var look = card('tilt2', el('h2', null, 'Look'), field('Haircut', 'Every style from the three barbers, grouped by shop. The colour names follow the order the barbers list them in.', sel));
+
+    w.appendChild(look);
+
+    // wardrobe
+    var have = clothesOwned(s), outs = outfitsUnlocked(s);
+    w.appendChild(card('', el('h2', null, 'Wardrobe'),
+      field('All clothing items', 'Every shirt, pair of pants, shoe, hat and accessory you can buy or find - added to the closet in Jimmy’s room.',
+        el('span', { cls: 'row' }, bar(have, GIVE_CLOTHES.length), el('span', { cls: 'chip' + (have === GIVE_CLOTHES.length ? '' : ' warn') }, have + ' / ' + GIVE_CLOTHES.length)),
+        el('button', { cls: 'btn' + (have === GIVE_CLOTHES.length ? ' done' : ' red'), disabled: have === GIVE_CLOTHES.length ? 'disabled' : null, onclick: function () { giveAllClothes(s); changed(); toast('Closet stuffed!'); } }, have === GIVE_CLOTHES.length ? 'All unlocked' : 'Unlock all')),
+      field('Outfits', 'Boxing, Wrestling, Mascot, Orderly, Halloween, Pajamas, Prison, Grotto Master, Gnome, Fast Food, Gold Suit, Ninja (black, white, red) and Uniform.',
+        el('span', { cls: 'row' }, bar(outs, OUTFITS_100.length), el('span', { cls: 'chip' + (outs === OUTFITS_100.length ? '' : ' warn') }, outs + ' / ' + OUTFITS_100.length)),
+        el('button', { cls: 'btn' + (outs === OUTFITS_100.length ? ' done' : ' red'), disabled: outs === OUTFITS_100.length ? 'disabled' : null, onclick: function () { unlockOutfits(s); changed(); toast('Outfits unlocked'); } }, outs === OUTFITS_100.length ? 'All unlocked' : 'Unlock all'))));
+  }
+
+  function pRespect(w, s) {
+    var c = card('factions', el('div', { cls: 'row', style: 'justify-content:space-between' }, el('h2', null, 'Clique respect'),
+      el('button', { cls: 'btn small red', onclick: function () { CLIQUES.forEach(function (x) { s.setU32(respectOff(x[0]), 100); }); changed(); toast('Everybody loves Jimmy'); } }, 'Everyone 100%')));
+    c.appendChild(el('p', { cls: 'note' }, 'How each clique feels about Jimmy: 0% = they hate you, 50% = neutral, 100% = full respect.'));
+    CLIQUES.forEach(function (x) {
+      c.appendChild(field(el('span', { cls: 'row', style: 'gap:8px' }, el('span', { cls: 'dot', style: 'background:' + x[2] }), x[1]), null,
+        meter(x[2], function () { return s.u32(respectOff(x[0])); }, function (v) { s.setU32(respectOff(x[0]), v); }, x[1] + ' respect')));
+    });
+    w.appendChild(c);
+  }
+
+  function pClasses(w, s) {
+    var rc = el('div', { cls: 'report' },
+      el('div', { cls: 'report-h' }, el('span', null, 'Report Card'), el('button', { cls: 'btn small gold', onclick: function () { for (var i = 0; i < 6; i++) s.setU32(classOff(i), 5); changed(); toast('Straight A’s!'); } }, 'Pass every class')),
+      el('p', { cls: 'report-note' }, 'Click a box to set how many levels are passed (click the last ticked box again to untick it). The game hands out each level’s reward when the save loads.'));
+    var grid = el('div', { cls: 'report-grid' });
+    CLASSES.forEach(function (name, i) {
+      var v = s.u32(classOff(i)), boxes = el('div', { cls: 'rc-boxes', role: 'group', 'aria-label': name + ' levels' });
+      for (var k = 1; k <= 5; k++) (function (k) {
+        boxes.appendChild(el('button', { cls: 'rc-box' + (k <= v ? ' on' : ''), 'aria-label': name + ' level ' + k + (k <= v ? ' passed' : ''), onclick: function () { s.setU32(classOff(i), (k === v) ? k - 1 : k); changed(); } }, k <= v ? '✓' : ''));
+      })(k);
+      var rw = CLASS_REWARDS[name];
+      grid.appendChild(el('div', { cls: 'rc-class' }, el('div', { cls: 'rc-name' }, name), boxes,
+        el('div', { cls: 'rc-reward' }, v >= 5 ? el('span', null, el('b', null, 'Complete. '), 'All ' + name + ' rewards unlocked') : el('span', null, el('b', null, 'Next: '), rw[v]))));
+    });
+    rc.appendChild(grid);
+    var tbl = el('table');
+    CLASSES.forEach(function (name) { tbl.appendChild(el('tr', null, el('th', null, name), el('td', null, el('ol', { style: 'margin:0;padding-left:18px' }, CLASS_REWARDS[name].map(function (r) { return el('li', null, r); }))))); });
+    rc.appendChild(el('details', { cls: 'rc-list' }, el('summary', null, 'What every level unlocks'), tbl));
+    w.appendChild(el('div', { cls: 'card notape', style: 'padding:0;background:none;border:none;box-shadow:none' }, rc));
+  }
+
+  function pWeapons(w, s) {
+    var c = card('', el('div', { cls: 'row', style: 'justify-content:space-between' }, el('h2', null, 'Weapons'),
+      el('button', { cls: 'btn small red', onclick: function () { WEAPONS.forEach(function (x) { setWeapon(s, x[0], Math.max(x[2], weaponAmt(s, x[0]))); }); changed(); toast('Fully loaded'); } }, 'Give all (max ammo)')));
+    c.appendChild(el('p', { cls: 'note' }, 'Tick to carry it. Ammo can’t go above the game’s limit - anything higher gets set back to the limit when the save loads.'));
+    WEAPONS.forEach(function (x) {
+      var amt = weaponAmt(s, x[0]), cb = el('input', { type: 'checkbox', id: 'w' + x[0], 'aria-label': x[1] }); cb.checked = amt > 0;
+      cb.addEventListener('change', function () { setWeapon(s, x[0], cb.checked ? x[2] : 0); changed(); });
+      var right;
+      if (x[2] > 1) {
+        var n = el('input', { type: 'number', min: 0, value: amt, 'aria-label': x[1] + ' amount' });
+        n.addEventListener('change', function () { setWeapon(s, x[0], Math.max(0, Math.min(4294967295, parseInt(n.value) || 0))); changed(); });
+        right = el('span', { cls: 'amt' }, n, amt > x[2] ? warnChip(amt, x[2]) : el('span', { cls: 'note' }, 'max ' + x[2]));
+      } else right = el('span', { cls: 'note' }, amt ? 'carried' : '');
+      c.appendChild(el('div', { cls: 'weap' }, cb, el('label', { cls: 'nm', for: 'w' + x[0] }, x[1], x[3] ? el('small', null, x[3]) : null), right));
+    });
+    w.appendChild(c);
+    var it = card('tilt2', el('h2', null, 'Gifts & tickets'));
+    ITEMS.forEach(function (x) {
+      it.appendChild(field(x[1], x[3] + ' - no limit, any amount works', numBox(function () { return s.u32(itemOff(s, x[0])); }, function (n) { s.setU32(itemOff(s, x[0]), n); }, { label: x[1], max: 4294967295 })));
+    });
+    w.appendChild(it);
+  }
+
+  function setCollected(s, a, b, n) { for (var i = a; i <= b; i++) { var o = pickOff(s, i); if (i - a < n) { s.setU8(o, 1); s.setU8(o + 1, 1); } else s.setU8(o, 0); } }
+  function pCollect(w, s) {
+    var c = card('', el('div', { cls: 'row', style: 'justify-content:space-between' }, el('h2', null, 'Collectibles'),
+      el('button', { cls: 'btn small red', onclick: function () { COLLECT.forEach(function (x) { collect(s, x[1], x[2]); }); changed(); toast('All 192 collected'); } }, 'Collect everything')));
+    c.appendChild(el('p', { cls: 'note' }, 'Type how many of each you’ve found. Completing a set earns its reward the next time the save loads. Lowering a number later won’t take a reward back.'));
+    COLLECT.forEach(function (x) {
+      var n = collected(s, x[1], x[2]), of = x[2] - x[1] + 1;
+      c.appendChild(field(x[0], x[3],
+        el('span', { cls: 'row' }, numBox(function () { return collected(s, x[1], x[2]); }, function (v) { setCollected(s, x[1], x[2], v); }, { min: 0, max: of, width: '84px', label: x[0] }), el('span', { cls: 'note' }, '/ ' + of)),
+        el('span', { cls: 'row' }, bar(n, of), el('button', { cls: 'btn small', onclick: function () { setCollected(s, x[1], x[2], of); changed(); toast(x[0] + ' complete'); } }, 'All'))));
+    });
+    w.appendChild(c);
+  }
+
+  function pUnlocks(w, s) {
+    var hobo = hoboCount(s), er = errandsDone(s), ds = doorStats(s);
+    var c = card('', el('h2', null, 'Unlocks'),
+      field('Hobo fighting moves', 'Completes the six "A Little Help" lessons, so the hobo teaches all six moves: Uppercut, Leg Sweep, Thrust Kick, 5-Punch Combo, Roundhouse Kick and Overhead Punch.',
+        el('span', { cls: 'chip' + (hobo === 6 ? '' : ' warn') }, hobo + ' / 6 lessons'),
+        el('button', { cls: 'btn' + (hobo === 6 ? ' done' : ' red'), disabled: hobo === 6 ? 'disabled' : null, onclick: function () { for (var i = 14; i <= 19; i++) passMission(s, i); changed(); toast('Hobo moves learned'); } }, hobo === 6 ? 'Learned' : 'Learn all')),
+      field('Errands', 'Marks the errands done as in a 100% save. Earns the 10 / 20 / 30 errand trophies.',
+        el('span', { cls: 'chip' + (er >= REF_ERR_DONE ? '' : ' warn') }, er + ' done'),
+        el('button', { cls: 'btn' + (er >= REF_ERR_DONE ? ' done' : ' red'), disabled: er >= REF_ERR_DONE ? 'disabled' : null, onclick: function () { completeErrands(s); changed(); toast('Errands complete'); } }, er >= REF_ERR_DONE ? 'Done' : 'Complete')),
+      field('Unlock doors', 'Unlocks every door the save knows about (e.g. the girls’ dorm). Some doors stay shut until the story opens them (like the school gate early on), and the game may re-lock a few.',
+        el('span', { cls: 'chip' + (ds.locked ? ' warn' : '') }, ds.locked + ' locked'),
+        el('button', { cls: 'btn' + (ds.locked ? ' red' : ' done'), disabled: ds.locked ? null : 'disabled', onclick: function () { unlockDoors(s); changed(); toast('Doors unlocked'); } }, ds.locked ? 'Unlock all' : 'All unlocked')));
+    var bk = el('div');
+    bk.appendChild(el('h3', { style: 'margin-top:14px' }, 'Garage'));
+    bk.appendChild(el('p', { cls: 'note' }, 'The two spots in Jimmy’s bike garage. Every bike, the Moped and the Go-Kart are listed. The Red BMX and the Moped were tested on a PS4 and work; the Police Dirt Bike shows up but Jimmy can’t get on it; the rest are untested. Names marked "likely" are matched from the wiki’s descriptions.'));
+    [0, 1].forEach(function (k) {
+      var sel = el('select', { 'aria-label': 'Garage spot ' + (k + 1) }), cur = bikeSlot(s, k);
+      sel.appendChild(el('option', { value: 4294967295 }, 'Empty'));
+      BIKES.forEach(function (b) { sel.appendChild(el('option', { value: b[0] }, b[1] + (b[3] === true ? '' : typeof b[3] === 'string' ? ' (' + b[3] + ')' : ' (untested)'))); });
+      if (cur !== 0xffffffff && !BIKES.some(function (b) { return b[0] === cur; })) sel.appendChild(el('option', { value: cur }, 'Vehicle #' + cur));
+      sel.value = String(cur);
+      sel.addEventListener('change', function () { setBikeSlot(s, k, +sel.value); changed(); });
+      bk.appendChild(field('Garage spot ' + (k + 1), null, sel));
+    });
+    c.appendChild(bk);
+    w.appendChild(c);
+  }
+
+
+  function pExtras(w, s) {
+    w.appendChild(card('sticky notape', el('h2', null, '⚠ Untested extras'),
+      el('p', null, 'Nothing on this page has been tested on a PS4. Any of it might make the game say "Load failed! Data may be corrupted", or behave oddly in-game. You’ll get a reminder listing these changes before you export. Keep a backup of your original save.')));
+
+    // more weapons
+    var c = card('', el('h2', null, 'More weapons ', el('span', { cls: 'chip warn' }, 'untested')),
+      el('p', { cls: 'note' }, 'Weapons that have never shown up in a real save. Many are pick-up weapons the game may simply drop when it loads.'));
+    EXTRA_WEAPONS.forEach(function (x) {
+      var amt = weaponAmt(s, x[0]), cb = el('input', { type: 'checkbox', id: 'xw' + x[0], 'aria-label': x[1] }); cb.checked = amt > 0;
+      cb.addEventListener('change', function () { setWeapon(s, x[0], cb.checked ? x[2] : 0); changed(); });
+      var right = el('span', { cls: 'note' }, amt ? 'carried' : '');
+      if (x[2] > 1) {
+        var n = el('input', { type: 'number', min: 0, value: amt, 'aria-label': x[1] + ' amount' });
+        n.addEventListener('change', function () { setWeapon(s, x[0], Math.max(0, Math.min(4294967295, parseInt(n.value) || 0))); changed(); });
+        right = el('span', { cls: 'amt' }, n);
+      }
+      c.appendChild(el('div', { cls: 'weap' }, cb, el('label', { cls: 'nm', for: 'xw' + x[0] }, x[1], x[3] ? el('small', null, x[3]) : null), right));
+    });
+    w.appendChild(c);
+
+    // mission items
+    var mi = card('tilt2', el('h2', null, 'Mission items ', el('span', { cls: 'chip warn' }, 'untested')),
+      el('p', { cls: 'note' }, 'These show up under mission objects, but having them at the wrong time might confuse the mission that uses them.'));
+    MISSION_ITEMS.forEach(function (x) {
+      mi.appendChild(field(x[1], null, numBox(function () { return s.u32(itemOff(s, x[0])); }, function (n) { s.setU32(itemOff(s, x[0]), n); }, { label: x[1], max: 4294967295 })));
+    });
+    w.appendChild(mi);
+
+    // time
+    var tm = card('', el('h2', null, 'Time ', el('span', { cls: 'chip warn' }, 'untested')),
+      field('Time of day', 'The clock when the save loads (24-hour). This is our best guess at where the game keeps it.',
+        el('span', { cls: 'row' }, numBox(function () { return s.u32(0x58); }, function (v) { s.setU32(0x58, v); }, { label: 'Clock hour', min: 0, max: 23, width: '72px' }), ':',
+          numBox(function () { return s.u32(0x5c); }, function (v) { s.setU32(0x5c, v); }, { label: 'Clock minute', min: 0, max: 59, width: '72px' }))),
+      field('Play time', 'Changes the play time in the save, the Stats screen and the load screen together.',
+        el('span', { cls: 'row' },
+          numBox(function () { return s.u32(0x68); }, function (v) { setPlayTime(s, v, s.u32(0x6c), s.u32(0x70)); }, { label: 'Play time hours', min: 0, max: 9999, width: '84px' }), 'h',
+          numBox(function () { return s.u32(0x6c); }, function (v) { setPlayTime(s, s.u32(0x68), v, s.u32(0x70)); }, { label: 'Play time minutes', min: 0, max: 59, width: '64px' }), 'm',
+          numBox(function () { return s.u32(0x70); }, function (v) { setPlayTime(s, s.u32(0x68), s.u32(0x6c), v); }, { label: 'Play time seconds', min: 0, max: 59, width: '64px' }), 's')));
+    if (S.recOff != null) {
+      var o = S.recOff + 28;
+      tm.appendChild(field('Load-screen save date', 'Only changes the date shown on the Load Game screen (day / month / year, time).',
+        el('span', { cls: 'row' },
+          numBox(function () { return ftU32(o + 8); }, function (v) { ftSet(o + 8, v); }, { label: 'Save day', min: 1, max: 31, width: '64px' }), '/',
+          numBox(function () { return ftU32(o + 4); }, function (v) { ftSet(o + 4, v); }, { label: 'Save month', min: 1, max: 12, width: '64px' }), '/',
+          numBox(function () { return 2000 + ftU32(o); }, function (v) { ftSet(o, v - 2000); }, { label: 'Save year', min: 2000, max: 2099, width: '84px' }),
+          numBox(function () { return ftU32(o + 12); }, function (v) { ftSet(o + 12, v); }, { label: 'Save hour', min: 0, max: 23, width: '64px' }), ':',
+          numBox(function () { return ftU32(o + 16); }, function (v) { ftSet(o + 16, v); }, { label: 'Save minute', min: 0, max: 59, width: '64px' }))));
+    }
+    w.appendChild(tm);
+
+    // stats
+    var sc = card('tilt2', el('h2', null, 'Stats ', el('span', { cls: 'chip warn' }, 'untested')),
+      el('p', { cls: 'note' }, 'Everything on the in-game Stats screen. Some PS4 trophies are tied to stats (knockouts, wedgies, wheelies, kisses...), but it’s unknown whether editing them unlocks anything. Distances are in metres; Time Played is in milliseconds.'));
+    var filt = el('input', { type: 'search', placeholder: 'Search stats (e.g. knocked, kiss, bike)', value: statFilter, 'aria-label': 'Search stats', style: 'width:100%;margin:6px 0 10px' });
+    var listBox = el('div', { cls: 'statlist' });
+    function applyFilter() { var q = filt.value.trim().toLowerCase(); statFilter = filt.value; Array.prototype.forEach.call(listBox.children, function (r) { r.style.display = !q || r.getAttribute('data-n').indexOf(q) >= 0 ? '' : 'none'; }); }
+    filt.addEventListener('input', applyFilter);
+    STATS.forEach(function (x) {
+      var i = x[0], fl = !!STAT_FLOAT[i];
+      var row = field(x[1], null, numBox(function () { var v = getStat(s, i); return fl ? Math.round(v * 10) / 10 : v; },
+        function (v) { if (fl) s.setF32(s.statOff(i), v); else s.setU32(s.statOff(i), v); }, { label: 'Stat ' + x[1], max: fl ? 1e9 : 4294967295, float: fl, step: fl ? 'any' : 1, width: '130px' }));
+      row.setAttribute('data-n', x[1].toLowerCase());
+      listBox.appendChild(row);
+    });
+    sc.appendChild(filt); sc.appendChild(listBox); applyFilter();
+    w.appendChild(sc);
+  }
+
+  /* ---------------------------------------------------------- change list */
+  function changeList() {
+    if (!S) return [];
+    var s = sv(), o = new Core.BullySave(S.orig), out = [];
+    if (getMoney(s.b) !== getMoney(o.b)) out.push('Money: ' + money(getMoney(o.b)) + ' → ' + money(getMoney(s.b)));
+    if (s.u32(cloth(s).hair) !== o.u32(cloth(o).hair)) { var hn = hairName(s), hx = HAIRS.filter(function (x) { return x.name === hn; })[0]; out.push('Haircut: ' + (hx ? hx.label : 'changed')); }
+    if (Math.round(s.f32(0x20)) !== Math.round(o.f32(0x20))) out.push('Health: ' + Math.round(o.f32(0x20)) + ' → ' + Math.round(s.f32(0x20)));
+    if (Math.round(s.f32(0x24)) !== Math.round(o.f32(0x24))) out.push('Max health: ' + Math.round(o.f32(0x24)) + ' → ' + Math.round(s.f32(0x24)));
+    CLIQUES.forEach(function (c) { var a = o.u32(respectOff(c[0])), b = s.u32(respectOff(c[0])); if (a !== b) out.push(c[1] + ' respect: ' + a + ' → ' + b); });
+    CLASSES.forEach(function (n, i) { var a = o.u32(classOff(i)), b = s.u32(classOff(i)); if (a !== b) out.push(n + ' class: level ' + a + ' → ' + b); });
+    var ca = clothesOwned(o), cb = clothesOwned(s); if (ca !== cb) out.push('Clothing items: ' + ca + ' → ' + cb);
+    var oa = outfitsUnlocked(o), ob = outfitsUnlocked(s); if (oa !== ob) out.push('Outfits unlocked: ' + oa + ' → ' + ob);
+    WEAPONS.forEach(function (x) { var a = weaponAmt(o, x[0]), b = weaponAmt(s, x[0]); if (a !== b) out.push(x[1] + ': ' + (b ? (x[2] > 1 ? b : 'added') : 'removed')); });
+    ITEMS.forEach(function (x) { var a = o.u32(itemOff(o, x[0])), b = s.u32(itemOff(s, x[0])); if (a !== b) out.push(x[1] + ': ' + a + ' → ' + b); });
+    COLLECT.forEach(function (x) { var a = collected(o, x[1], x[2]), b = collected(s, x[1], x[2]); if (a !== b) out.push(x[0] + ': ' + a + ' → ' + b); });
+    var ha = hoboCount(o), hb = hoboCount(s); if (ha !== hb) out.push('Hobo lessons: ' + ha + ' → ' + hb);
+    var ea = errandsDone(o), eb = errandsDone(s); if (ea !== eb) out.push('Errands done: ' + ea + ' → ' + eb);
+    var da = doorStats(o).locked, db = doorStats(s).locked; if (da !== db) out.push('Locked doors: ' + da + ' → ' + db);
+    [0, 1].forEach(function (k) { if (bikeSlot(s, k) !== bikeSlot(o, k)) out.push('Garage spot ' + (k + 1) + ': ' + bikeName(bikeSlot(o, k)) + ' → ' + bikeName(bikeSlot(s, k))); });
+    return out.concat(riskyChanges().map(function (x) { return x + ' (untested)'; }));
+  }
+  function riskyChanges() {
+    if (!S) return [];
+    var s = sv(), o = new Core.BullySave(S.orig), out = [];
+    var hp = s.f32(0x20), mh = s.f32(0x24);
+    if ((hp > GOD_HP && hp !== o.f32(0x20)) || (mh > GOD_HP && mh !== o.f32(0x24))) out.push('Health or max health above ' + GOD_HP.toLocaleString('en-US'));
+    EXTRA_WEAPONS.forEach(function (x) { var a = weaponAmt(o, x[0]), b = weaponAmt(s, x[0]); if (a !== b) out.push(x[1] + ': ' + (b ? (x[2] > 1 ? b : 'added') : 'removed')); });
+    MISSION_ITEMS.forEach(function (x) { var a = o.u32(itemOff(o, x[0])), b = s.u32(itemOff(s, x[0])); if (a !== b) out.push(x[1] + ': ' + a + ' → ' + b); });
+    if (s.u32(0x58) !== o.u32(0x58) || s.u32(0x5c) !== o.u32(0x5c)) out.push('Time of day: ' + pad2(o.u32(0x58)) + ':' + pad2(o.u32(0x5c)) + ' → ' + pad2(s.u32(0x58)) + ':' + pad2(s.u32(0x5c)));
+    if (s.u32(0x68) !== o.u32(0x68) || s.u32(0x6c) !== o.u32(0x6c) || s.u32(0x70) !== o.u32(0x70)) out.push('Play time: ' + o.u32(0x68) + 'h ' + pad2(o.u32(0x6c)) + 'm ' + pad2(o.u32(0x70)) + 's → ' + s.u32(0x68) + 'h ' + pad2(s.u32(0x6c)) + 'm ' + pad2(s.u32(0x70)) + 's');
+    if (S.recOff != null) { var d0 = ftDateStr(ftOrigU32), d1 = ftDateStr(ftU32); if (d0 !== d1) out.push('Load-screen date: ' + d0 + ' → ' + d1); }
+    STATS.forEach(function (x) { if (x[0] === 2 && (s.u32(0x68) !== o.u32(0x68) || s.u32(0x6c) !== o.u32(0x6c) || s.u32(0x70) !== o.u32(0x70))) return;
+      var a = getStat(o, x[0]), b = getStat(s, x[0]); if (a !== b) out.push('Stat "' + x[1] + '": ' + fmtStat(x[0], a) + ' → ' + fmtStat(x[0], b)); });
+    return out;
+  }
+
+  /* --------------------------------------------------------------- export */
+  function buildCard() {
+    var s = sv();
+    s.fixChecksum();
+    var fname = S.ent.name, mc = new Core.MemCard(S.card.orig, S.name);
+    mc.writeFile(mc.findFile(S.dir, fname), s.b);
+    var ftChanged = S.ft && !Core.u8eq(S.ft, S.ftOrig);
+    if (ftChanged) mc.writeFile(mc.findFile(S.dir, 'FileTableBully'), S.ft);
+    var chk = new Core.MemCard(mc.raw), back = new Core.BullySave(chk.readFile(chk.findFile(S.dir, fname)));
+    if (ftChanged && !Core.u8eq(chk.readFile(chk.findFile(S.dir, 'FileTableBully')), S.ft)) throw new Error('Self-check failed, so nothing was exported. Your save wasn’t touched - please try again or report this.');
+    if (!Core.u8eq(back.b, s.b) || !back.checksumOk() || chk.eccReport().bad) throw new Error('Self-check failed, so nothing was exported. Your save wasn’t touched - please try again or report this.');
+    S.exported = true;
+    return mc.raw;
+  }
+  function riskyDialog(list, proceed) {
+    var prev = document.activeElement;
+    var ov = el('div', { cls: 'modal-bg', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'rk-h' });
+    function close() { ov.remove(); document.removeEventListener('keydown', esc); if (prev && prev.focus) prev.focus(); }
+    function esc(e) { if (e.key === 'Escape') close(); }
+    var goBtn = el('button', { cls: 'btn red', onclick: function () { close(); proceed(); } }, 'Export anyway');
+    ov.appendChild(el('div', { cls: 'modal card notape' },
+      el('h2', { id: 'rk-h' }, '⚠ This save might not load'),
+      el('p', null, 'These changes haven’t been tested on a PS4. There’s a chance the game says "Load failed! Data may be corrupted" or acts strangely:'),
+      el('ul', { cls: 'changes' }, list.map(function (t) { return el('li', null, t); })),
+      el('p', { cls: 'note' }, 'Keep a backup of your original save. If it won’t load, undo these on the Untested tab and export again.'),
+      el('div', { cls: 'row', style: 'margin-top:12px;justify-content:flex-end' },
+        el('button', { cls: 'btn', onclick: close }, 'Go back'), goBtn)));
+    ov.addEventListener('click', function (e) { if (e.target === ov) close(); });
+    document.addEventListener('keydown', esc);
+    document.body.appendChild(ov); goBtn.focus();
+  }
+  function download(blob, name) { var a = el('a', { href: URL.createObjectURL(blob), download: name }); document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1500); }
+  function pSave(w, s) {
+    var list = changeList();
+    var c = card('', el('h2', null, 'Save & export'));
+    var risky = riskyChanges();
+    if (!list.length) c.appendChild(el('p', null, 'No changes yet - pick something in the other tabs (or hit "Max out everything").'));
+    else { c.appendChild(el('p', null, 'You’re about to save these changes:')); c.appendChild(el('ul', { cls: 'changes' }, list.map(function (t) { return el('li', { cls: / \(untested\)$/.test(t) ? 'risky' : null }, t); }))); }
+    if (risky.length) c.appendChild(el('p', { cls: 'chip warn', style: 'margin-top:8px' }, risky.length + ' untested change' + (risky.length > 1 ? 's' : '') + ' - the save might not load. You’ll get a reminder before it downloads.'));
+    var msg = el('div');
+    function go(asZip) {
+      if (risky.length) return riskyDialog(risky, function () { doExport(asZip); });
+      doExport(asZip);
+    }
+    function doExport(asZip) {
+      msg.innerHTML = '';
+      try {
+        var raw = buildCard();
+        if (asZip) {
+          var files = S.zip.map(function (f) { return { name: f.name, raw: /(^|\/)VMC0\.card$/i.test(f.name) ? raw : f.raw }; });
+          download(writeZip(files), S.name.replace(/\.zip$/i, '') + '_edited.zip');
+        } else download(new Blob([raw], { type: 'application/octet-stream' }), 'VMC0.card');
+        msg.appendChild(el('div', { cls: 'ok', style: 'margin-top:12px' }, 'Done! Checksum updated and verified. Now re-encrypt the downloaded ' + (asZip ? 'zip' : 'VMC0.card') + ' with your save tool and copy it to your PS4.'));
+      } catch (e) { msg.appendChild(el('div', { cls: 'err', style: 'margin-top:12px' }, e.message)); }
+    }
+    var btns = el('div', { cls: 'row', style: 'margin-top:14px' });
+    if (S.zip) btns.appendChild(el('button', { cls: 'btn red', disabled: list.length ? null : 'disabled', onclick: function () { go(true); } }, '⬇ Download edited save zip'));
+    btns.appendChild(el('button', { cls: 'btn' + (S.zip ? '' : ' red'), disabled: list.length ? null : 'disabled', onclick: function () { go(false); } }, '⬇ Download VMC0.card only'));
+    btns.appendChild(el('button', { cls: 'btn small', disabled: list.length ? null : 'disabled', onclick: function () { if (confirm('Undo all changes?')) { S.save.b.set(S.orig); if (S.ft) S.ft.set(S.ftOrig); render(); toast('All changes undone'); } } }, 'Undo all'));
+    c.appendChild(btns); c.appendChild(msg);
+    w.appendChild(c);
+    w.appendChild(card('sticky tilt2 notape', el('h3', null, 'Getting it back on your PS4'),
+      el('ol', { cls: 'steps' },
+        el('li', null, S.zip ? 'Upload the downloaded zip to your save tool (garlicsaves) to encrypt it.' : 'Put the downloaded VMC0.card back into your decrypted save folder (replace the old one), then encrypt it with your save tool.'),
+        el('li', null, 'Copy the encrypted save to your PS4 and load it in Bully.'),
+        el('li', null, 'Rewards for things you unlocked (trophies in Jimmy’s room, errand trophies) are handed out by the game when the save loads.')),
+      el('p', { cls: 'note' }, 'VMC1.card is always an empty spare memory card - leave it as it is.')));
+  }
+
+  window.addEventListener('DOMContentLoaded', function () {
+    $('#saveBtn').addEventListener('click', function () { tab = 'save'; render(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+    document.addEventListener('dragover', function (e) { e.preventDefault(); });
+    window.addEventListener('beforeunload', function (e) { if (S && changeList().length && !S.exported) { e.preventDefault(); e.returnValue = ''; } });
+    var v = $('#ver'); if (v) v.textContent = 'v' + VERSION;
+    document.addEventListener('drop', function (e) { e.preventDefault(); if (!S && e.dataTransfer.files[0]) load(e.dataTransfer.files[0]); });
+    render();
+  });
+  window.BullyApp = { load: load, get S() { return S; } };
+})();
+</script>
+</body>
+</html>
